@@ -28,6 +28,12 @@
                         Join a quiz
                     </a>
                 {% endif %}
+                {% if user.is_staff %}
+                    <a class="inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-semibold text-[#424242] hover:bg-[#eaf4ff] hover:text-[#0067c0]" href="{% url 'admin:index' %}">
+                        <i data-lucide="shield-check" class="h-4 w-4"></i>
+                        <span class="hidden sm:inline">Admin</span>
+                    </a>
+                {% endif %}
                 <form action="{% url 'logout' %}" method="post">
                     {% csrf_token %}
                     <button class="grid h-9 w-9 place-items-center rounded-full text-[#5c5c5c] hover:bg-[#f3f3f3]" aria-label="Logout" type="submit">

@@ -1,0 +1,13 @@
+{% if page.paginator.num_pages > 1 %}
+<div class="flex flex-wrap items-center justify-between gap-3 border-t border-[#ededed] px-6 py-4">
+    <p class="text-sm text-[#5c5c5c]">{{ page.paginator.count }} total · page {{ page.number }} of {{ page.paginator.num_pages }}</p>
+    <div class="flex items-center gap-2">
+        {% if page.has_previous %}
+            <a class="rounded-md border border-[#d6d6d6] bg-white px-3 py-1.5 text-xs font-semibold text-[#424242] hover:bg-[#f3f3f3]" href="?{% if base_query %}{{ base_query }}&{% endif %}page={{ page.previous_page_number }}">Prev</a>
+        {% endif %}
+        {% if page.has_next %}
+            <a class="rounded-md border border-[#d6d6d6] bg-white px-3 py-1.5 text-xs font-semibold text-[#424242] hover:bg-[#f3f3f3]" href="?{% if base_query %}{{ base_query }}&{% endif %}page={{ page.next_page_number }}">Next</a>
+        {% endif %}
+    </div>
+</div>
+{% endif %}

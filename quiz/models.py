@@ -84,6 +84,13 @@ class Choice(models.Model):
     class Meta:
         ordering = ["order", "id"]
 
+    @property
+    def letter(self):
+        choices = list(self.question.choices.all())
+        if self in choices:
+            return chr(65 + choices.index(self))
+        return "?"
+
     def __str__(self):
         return self.text
 

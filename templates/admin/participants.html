@@ -1,0 +1,62 @@
+{% extends "admin/base.html" %}
+{% block page_title %}Participants{% endblock %}
+{% block page_subtitle %}<p class="text-sm text-[#5c5c5c]">Everyone who joined a quiz session.</p>{% endblock %}
+
+{% block panel %}
+<form class="admin-card flex flex-col gap-3 p-4 sm:flex-row sm:items-center" method="get">
+    <input class="admin-input sm:max-w-xs" type="search" name="q" value="{{ q }}" placeholder="Search player name or code…">
+    <button class="admin-btn" type="submit"><i data-lucide="search" class="h-4 w-4"></i> Search</button>
+    {% if q %}
+        <a class="admin-btn admin-btn-outline" href="{% url 'admin:participants' %}">Clear</a>
+    {% endif %}
+</form>
+
+<div class="admin-card mt-6 overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="w-full min-w-[720px]">
+            <thead>
+                <tr>
+                    <th class="admin-th">Player</th>
+                    <th class="admin-th">Session</th>
+                    <th class="admin-th">Module</th>
+                    <th class="admin-th">Score</th>
+                    <th class="admin-th">Joined</th>
+                    <th class="admin-th text-right">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-[#f0f0f0]">
+                {% for p in participants %}
+                    <tr class="hover:bg-[#fafafa]">
+                        <td class="admin-td">
+                            <span class="flex items-center gap-3 font-semibold text-black">
+                                <span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#f0f6ff] text-xs font-bold text-[#1565c0]">{{ p.name|slice:":2"|upper }}</span>
+                                {{ p.name }}
+                            </span>
+                        </td>
+                        <td class="admin-td">
+                            <a class="admin-link" href="{% url 'admin:session_detail' p.session.id %}">
+                                <span class="rounded-md bg-[#eaf4ff] px-2 py-0.5 font-mono text-xs font-bold text-[#0067c0]">{{ p.session.code }}</span>
+                            </a>
+                        </td>
+                        <td class="admin-td text-[#424242]">{{ p.session.module.title|truncatechars:32 }}</td>
+                        <td class="admin-td font-bold text-[#0067c0]">{{ p.score }}</td>
+                        <td class="admin-td text-xs text-[#5c5c5c]">{{ p.joined_at|date:"M j, H:i" }}</td>
+                        <td class="admin-td">
+                            <div class="flex justify-end">
+                                <a class="admin-btn admin-btn-outline admin-btn-sm" href="{% url 'admin:session_detail' p.session.id %}">
+                                    <i data-lucide="eye" class="h-3.5 w-3.5"></i> View session
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="6" class="px-6 py-12 text-center text-sm text-[#5c5c5c]">No participants found.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% include "admin/_pagination.html" %}
+</div>
+{% endblock %}

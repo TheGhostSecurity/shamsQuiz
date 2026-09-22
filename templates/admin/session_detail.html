@@ -1,0 +1,112 @@
+{% extends "admin/base.html" %}
+{% block page_title %}Session {{ session.code }}{% endblock %}
+{% block page_subtitle %}<p class="text-sm text-[#5c5c5c]">{{ session.module.title }} · hosted by {{ session.host.username }}</p>{% endblock %}
+{% block page_actions %}
+    <a class="admin-btn admin-btn-outline admin-btn-sm" href="{% url 'admin:sessions' %}">
+        <i data-lucide="arrow-left" class="h-4 w-4"></i> All sessions
+    </a>
+    {% if session.status != 'ended' %}
+        <form method="post" action="{% url 'admin:session_end' session.id %}" onsubmit="return confirm('End session {{ session.code }}?')" class="contents">
+            {% csrf_token %}
+            <button class="admin-btn admin-btn-danger admin-btn-sm" type="submit">
+                <i data-lucide="square" class="h-4 w-4"></i> End session
+            </button>
+        </form>
+    {% endif %}
+{% endblock %}
+
+{% block panel %}
+<div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <div class="admin-card p-5">
+        <p class="text-sm font-semibold text-[#5c5c5c]">Join code</p>
+        <p class="mt-2 font-mono text-2xl font-bold text-[#0067c0]">{{ session.code }}</p>
+    </div>
+    <div class="admin-card p-5">
+        <p class="text-sm font-semibold text-[#5c5c5c]">Status</p>
+        <p class="mt-2">{% include "admin/_status.html" with s=session.status %}</p>
+    </div>
+    <div class="admin-card p-5">
+        <p class="text-sm font-semibold text-[#5c5c5c]">Players</p>
+        <p class="mt-2 text-2xl font-semibold text-black">{{ session.num_players }}</p>
+    </div>
+    <div class="admin-card p-5">
+        <p class="text-sm font-semibold text-[#5c5c5c]">Created</p>
+        <p class="mt-2 text-sm text-[#424242]">{{ session.created_at|date:"M j, Y" }}<span class="text-[#8c8c8c]"> · {{ session.created_at|date:"H:i" }}</span></p>
+        {% if session.ended_at %}<p class="mt-1 text-sm text-[#c47019]">Ended {{ session.ended_at|date:"M j, H:i" }}</p>{% endif %}
+    </div>
+</div>
+
+<div class="mt-6 grid gap-6 xl:grid-cols-2">
+    <div class="admin-card overflow-hidden">
+        <div class="border-b border-[#ededed] px-6 py-4">
+            <h2 class="flex items-center gap-2 font-semibold text-black"><i data-lucide="users" class="h-4 w-4 text-[#0067c0]"></i> Leaderboard</h2>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full min-w-[420px]">
+                <thead>
+                    <tr>
+                        <th class="admin-th">Rank</th>
+                        <th class="admin-th">Player</th>
+                        <th class="admin-th text-right">Score</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-[#f0f0f0]">
+                    {% for p in participants %}
+                        <tr class="hover:bg-[#fafafa]">
+                            <td class="admin-td">
+                                <span class="grid h-7 w-7 place-items-center rounded-lg {% if forloop.counter == 1 %}bg-[#fff7ed] text-[#c47019]{% else %}bg-[#f3f3f3] text-[#5c5c5c]{% endif %} text-xs font-bold">#{{ forloop.counter }}</span>
+                            </td>
+                            <td class="admin-td font-semibold text-black">{{ p.name }}</td>
+                            <td class="admin-td text-right font-bold text-[#0067c0]">{{ p.score }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="3" class="px-6 py-10 text-center text-sm text-[#5c5c5c]">No players joined.{% if session.status == 'waiting' %} Share the code to start getting players.{% endif %}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="admin-card overflow-hidden">
+        <div class="border-b border-[#ededed] px-6 py-4">
+            <h2 class="flex items-center gap-2 font-semibold text-black"><i data-lucide="list-checks" class="h-4 w-4 text-[#0067c0]"></i> Answers</h2>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full min-w-[520px]">
+                <thead>
+                    <tr>
+                        <th class="admin-th">Player</th>
+                        <th class="admin-th">Question</th>
+                        <th class="admin-th">Choice</th>
+                        <th class="admin-th">Correct</th>
+                        <th class="admin-th text-right">Points</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-[#f0f0f0]">
+                    {% for a in answers %}
+                        <tr class="hover:bg-[#fafafa]">
+                            <td class="admin-td font-semibold text-black">{{ a.participant.name }}</td>
+                            <td class="admin-td max-w-[260px] truncate text-[#424242]" title="{{ a.question.text }}">{{ a.question.text|truncatechars:40 }}</td>
+                            <td class="admin-td text-[#424242]">{{ a.choice.letter }} · {{ a.choice.text|truncatechars:24 }}</td>
+                            <td class="admin-td">
+                                {% if a.choice.is_correct %}
+                                    <span class="rounded-full bg-[#ecfdf3] px-2.5 py-1 text-xs font-semibold text-[#107c41]">Correct</span>
+                                {% else %}
+                                    <span class="rounded-full bg-[#fdf2f8] px-2.5 py-1 text-xs font-semibold text-[#be185d]">Wrong</span>
+                                {% endif %}
+                            </td>
+                            <td class="admin-td text-right font-bold {% if a.choice.is_correct %}text-[#107c41]{% else %}text-[#8c8c8c]{% endif %}">{{ a.points_earned }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="5" class="px-6 py-10 text-center text-sm text-[#5c5c5c]">No answers recorded yet.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

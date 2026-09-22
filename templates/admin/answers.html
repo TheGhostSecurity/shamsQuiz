@@ -1,0 +1,66 @@
+{% extends "admin/base.html" %}
+{% block page_title %}Answers{% endblock %}
+{% block page_subtitle %}<p class="text-sm text-[#5c5c5c]">Every recorded answer across all sessions.</p>{% endblock %}
+
+{% block panel %}
+<div class="flex flex-wrap items-center gap-3">
+    <a class="admin-btn admin-btn-sm {% if not correct %}admin-btn{% else %}admin-btn-outline{% endif %}" href="{% url 'admin:answers' %}">All answers</a>
+    <a class="{% if correct == 'yes' %}admin-btn admin-btn-sm{% else %}admin-btn admin-btn-outline admin-btn-sm{% endif %}" href="?correct=yes">Correct</a>
+    <a class="{% if correct == 'no' %}admin-btn admin-btn-sm{% else %}admin-btn admin-btn-outline admin-btn-sm{% endif %}" href="?correct=no">Wrong</a>
+</div>
+
+<form class="admin-card mt-4 flex flex-col gap-3 p-4 sm:flex-row sm:items-center" method="get">
+    {% if correct %}<input type="hidden" name="correct" value="{{ correct }}">{% endif %}
+    <input class="admin-input sm:max-w-xs" type="search" name="q" value="{{ q }}" placeholder="Search player, session or question…">
+    <button class="admin-btn" type="submit"><i data-lucide="search" class="h-4 w-4"></i> Search</button>
+    {% if q %}
+        <a class="admin-btn admin-btn-outline" href="{% url 'admin:answers' %}{% if correct %}?correct={{ correct }}{% endif %}">Clear</a>
+    {% endif %}
+</form>
+
+<div class="admin-card mt-4 overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="w-full min-w-[860px]">
+            <thead>
+                <tr>
+                    <th class="admin-th">Player</th>
+                    <th class="admin-th">Session</th>
+                    <th class="admin-th">Question</th>
+                    <th class="admin-th">Chosen</th>
+                    <th class="admin-th">Result</th>
+                    <th class="admin-th text-right">Points</th>
+                    <th class="admin-th">Time</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-[#f0f0f0]">
+                {% for a in answers %}
+                    <tr class="hover:bg-[#fafafa]">
+                        <td class="admin-td font-semibold text-black">{{ a.participant.name }}</td>
+                        <td class="admin-td">
+                            <a class="admin-link" href="{% url 'admin:session_detail' a.participant.session.id %}">
+                                <span class="rounded-md bg-[#eaf4ff] px-2 py-0.5 font-mono text-xs font-bold text-[#0067c0]">{{ a.participant.session.code }}</span>
+                            </a>
+                        </td>
+                        <td class="admin-td max-w-[260px] truncate text-[#424242]" title="{{ a.question.text }}">{{ a.question.text|truncatechars:44 }}</td>
+                        <td class="admin-td text-[#424242]">{{ a.choice.letter }} · {{ a.choice.text|truncatechars:28 }}</td>
+                        <td class="admin-td">
+                            {% if a.choice.is_correct %}
+                                <span class="rounded-full bg-[#ecfdf3] px-2.5 py-1 text-xs font-semibold text-[#107c41]">Correct</span>
+                            {% else %}
+                                <span class="rounded-full bg-[#fdf2f8] px-2.5 py-1 text-xs font-semibold text-[#be185d]">Wrong</span>
+                            {% endif %}
+                        </td>
+                        <td class="admin-td text-right font-bold {% if a.choice.is_correct %}text-[#107c41]{% else %}text-[#8c8c8c]{% endif %}">{{ a.points_earned }}</td>
+                        <td class="admin-td text-xs text-[#5c5c5c]">{{ a.answered_at|date:"M j, H:i:s" }}</td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="7" class="px-6 py-12 text-center text-sm text-[#5c5c5c]">No answers found.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% include "admin/_pagination.html" %}
+</div>
+{% endblock %}

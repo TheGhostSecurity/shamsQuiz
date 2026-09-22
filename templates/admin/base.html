@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+
+{% block title %}{% block head_title %}Admin{% endblock %} · ShamsQuiz{% endblock %}
+{% block body_class %}bg-[#f7f7f7] text-[#1f1f1f] antialiased{% endblock %}
+{% block main_class %}min-h-screen bg-[#f7f7f7]{% endblock %}
+{% block messages_wrap %}ml-60 mr-6 mt-4 space-y-2 px-4 sm:ml-64{% endblock %}
+
+{% block content %}
+<style>
+    .admin-input {
+        width: 100%;
+        border: 1px solid #d6d6d6;
+        border-radius: 8px;
+        padding: 9px 12px;
+        font-size: 14px;
+        outline: none;
+        background: #fff;
+        color: #1f1f1f;
+    }
+    .admin-input:focus {
+        border-color: #0067c0;
+        box-shadow: 0 0 0 2px #b7d8ff;
+    }
+    .admin-label {
+        display: block;
+        font-size: 13px;
+        font-weight: 600;
+        color: #424242;
+        margin-bottom: 4px;
+    }
+    .admin-checkbox {
+        width: 16px;
+        height: 16px;
+        accent-color: #0067c0;
+    }
+    .admin-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border-radius: 8px;
+        background: #0067c0;
+        color: #fff;
+        font-size: 14px;
+        font-weight: 600;
+        padding: 9px 14px;
+        border: 1px solid transparent;
+        cursor: pointer;
+    }
+    .admin-btn:hover {
+        background: #005a9e;
+    }
+    .admin-btn-outline {
+        background: #fff;
+        border-color: #d6d6d6;
+        color: #424242;
+    }
+    .admin-btn-outline:hover {
+        background: #f3f3f3;
+        color: #1f1f1f;
+    }
+    .admin-btn-danger {
+        background: #dc2626;
+    }
+    .admin-btn-danger:hover {
+        background: #b91c1c;
+    }
+    .admin-btn-sm {
+        padding: 6px 10px;
+        font-size: 13px;
+        border-radius: 6px;
+    }
+    .admin-card {
+        background: #fff;
+        border: 1px solid #e7e7e7;
+        border-radius: 12px;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+    }
+    .admin-th {
+        padding: 10px 20px;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+        color: #5c5c5c;
+        text-align: left;
+        background: #fafafa;
+        border-bottom: 1px solid #ededed;
+    }
+    .admin-td {
+        padding: 12px 20px;
+        font-size: 14px;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    .admin-link {
+        color: #0067c0;
+        font-weight: 600;
+    }
+    .admin-link:hover {
+        text-decoration: underline;
+    }
+    .admin-nav-link {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        width: 100%;
+        border-radius: 8px;
+        padding: 9px 12px;
+        font-size: 14px;
+        font-weight: 600;
+        color: #424242;
+    }
+    .admin-nav-link:hover {
+        background: #f3f3f3;
+    }
+    .admin-nav-active {
+        background: #eaf4ff;
+        color: #0067c0;
+    }
+</style>
+
+<div class="flex min-h-screen">
+    <aside class="fixed inset-y-0 left-0 z-40 flex w-60 flex-col border-r border-[#e7e7e7] bg-white">
+        <div class="flex items-center gap-2.5 px-5 py-5">
+            <span class="relative block h-7 w-10 shrink-0">
+                <span class="absolute left-0 top-2 h-4 w-7 rounded-full bg-[#0078d4]"></span>
+                <span class="absolute right-0 top-1 h-5 w-7 rounded-full bg-[#37a5ff]"></span>
+                <span class="absolute left-3 top-0 h-7 w-7 rounded-full bg-gradient-to-br from-[#54b6ff] to-[#005a9e]"></span>
+            </span>
+            <span class="text-lg font-bold tracking-tight text-black">ShamsQuiz Admin</span>
+        </div>
+
+        <nav class="flex-1 space-y-1 overflow-y-auto px-3 py-2">
+            <a href="{% url 'admin:index' %}" class="admin-nav-link {% if request.resolver_match.url_name == 'index' %}admin-nav-active{% endif %}">
+                <i data-lucide="layout-dashboard" class="h-4 w-4"></i> Dashboard
+            </a>
+            <a href="{% url 'admin:users' %}" class="admin-nav-link {% if request.resolver_match.url_name in 'users user_create user_edit user_delete' %}admin-nav-active{% endif %}">
+                <i data-lucide="users" class="h-4 w-4"></i> Users
+            </a>
+            <a href="{% url 'admin:modules' %}" class="admin-nav-link {% if request.resolver_match.url_name in 'modules module_detail module_delete' %}admin-nav-active{% endif %}">
+                <i data-lucide="folder-open" class="h-4 w-4"></i> Modules
+            </a>
+            <a href="{% url 'admin:sessions' %}" class="admin-nav-link {% if request.resolver_match.url_name in 'sessions session_detail session_end' %}admin-nav-active{% endif %}">
+                <i data-lucide="radio" class="h-4 w-4"></i> Quiz sessions
+            </a>
+            <a href="{% url 'admin:participants' %}" class="admin-nav-link {% if request.resolver_match.url_name == 'participants' %}admin-nav-active{% endif %}">
+                <i data-lucide="user-check" class="h-4 w-4"></i> Participants
+            </a>
+            <a href="{% url 'admin:answers' %}" class="admin-nav-link {% if request.resolver_match.url_name == 'answers' %}admin-nav-active{% endif %}">
+                <i data-lucide="list-checks" class="h-4 w-4"></i> Answers
+            </a>
+        </nav>
+
+        <div class="space-y-1 border-t border-[#ededed] px-3 py-3">
+            <a href="{% url 'home' %}" class="admin-nav-link" target="_blank" rel="noopener">
+                <i data-lucide="external-link" class="h-4 w-4"></i> View site
+            </a>
+            <a href="{% url 'dashboard' %}" class="admin-nav-link">
+                <i data-lucide="arrow-left-right" class="h-4 w-4"></i> Teacher area
+            </a>
+            <form action="{% url 'logout' %}" method="post" class="contents">
+                {% csrf_token %}
+                <button class="admin-nav-link w-full" type="submit">
+                    <i data-lucide="log-out" class="h-4 w-4"></i> Log out
+                </button>
+            </form>
+        </div>
+    </aside>
+
+    <div class="ml-60 min-w-0 flex-1">
+        <header class="sticky top-0 z-30 border-b border-[#e7e7e7] bg-white/90 px-6 py-4 backdrop-blur lg:px-8">
+            <div class="flex items-center justify-between gap-4">
+                <div>
+                    <h1 class="text-xl font-semibold text-black">{% block page_title %}{% endblock %}</h1>
+                    {% block page_subtitle %}<p class="text-sm text-[#5c5c5c]">&nbsp;</p>{% endblock %}
+                </div>
+                <div class="flex items-center gap-3">
+                    {% block page_actions %}{% endblock %}
+                    <span class="grid h-9 w-9 place-items-center rounded-full bg-[#0067c0] text-xs font-bold text-white">
+                        {{ request.user.username|slice:":2"|upper }}
+                    </span>
+                </div>
+            </div>
+        </header>
+        <main class="p-6 lg:p-8">
+            {% block panel %}{% endblock %}
+        </main>
+    </div>
+</div>
+{% endblock %}

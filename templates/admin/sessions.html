@@ -1,0 +1,74 @@
+{% extends "admin/base.html" %}
+{% block page_title %}Quiz sessions{% endblock %}
+{% block page_subtitle %}<p class="text-sm text-[#5c5c5c]">Every hosted quiz session, live or ended.</p>{% endblock %}
+
+{% block panel %}
+<div class="flex flex-wrap items-center gap-3">
+    <a class="admin-btn admin-btn-sm {% if not status %}admin-btn{% else %}admin-btn-outline{% endif %}" href="{% url 'admin:sessions' %}">All</a>
+    <a class="{% if status == 'live' %}admin-btn admin-btn-sm{% else %}admin-btn admin-btn-outline admin-btn-sm{% endif %}" href="?status=live">Live</a>
+    <a class="{% if status == 'ended' %}admin-btn admin-btn-sm{% else %}admin-btn admin-btn-outline admin-btn-sm{% endif %}" href="?status=ended">Ended</a>
+</div>
+
+<form class="admin-card mt-4 flex flex-col gap-3 p-4 sm:flex-row sm:items-center" method="get">
+    {% if status %}<input type="hidden" name="status" value="{{ status }}">{% endif %}
+    <input class="admin-input sm:max-w-xs" type="search" name="q" value="{{ q }}" placeholder="Search code, module or host…">
+    <button class="admin-btn" type="submit"><i data-lucide="search" class="h-4 w-4"></i> Search</button>
+    {% if q %}
+        <a class="admin-btn admin-btn-outline" href="{% url 'admin:sessions' %}{% if status %}?status={{ status }}{% endif %}">Clear</a>
+    {% endif %}
+</form>
+
+<div class="admin-card mt-4 overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="w-full min-w-[820px]">
+            <thead>
+                <tr>
+                    <th class="admin-th">Code</th>
+                    <th class="admin-th">Module</th>
+                    <th class="admin-th">Host</th>
+                    <th class="admin-th">Players</th>
+                    <th class="admin-th">Status</th>
+                    <th class="admin-th">Created</th>
+                    <th class="admin-th text-right">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-[#f0f0f0]">
+                {% for s in sessions %}
+                    <tr class="hover:bg-[#fafafa]">
+                        <td class="admin-td">
+                            <span class="rounded-md bg-[#eaf4ff] px-2.5 py-1 font-mono text-sm font-bold text-[#0067c0]">{{ s.code }}</span>
+                        </td>
+                        <td class="admin-td">
+                            <a class="admin-link" href="{% url 'admin:module_detail' s.module.id %}">{{ s.module.title }}</a>
+                        </td>
+                        <td class="admin-td text-[#424242]">{{ s.host.username }}</td>
+                        <td class="admin-td text-[#424242]">{{ s.num_players }}</td>
+                        <td class="admin-td">{% include "admin/_status.html" with s=s.status %}</td>
+                        <td class="admin-td text-xs text-[#5c5c5c]">{{ s.created_at|date:"M j, Y H:i" }}</td>
+                        <td class="admin-td">
+                            <div class="flex items-center justify-end gap-2">
+                                <a class="admin-btn admin-btn-outline admin-btn-sm" href="{% url 'admin:session_detail' s.id %}">
+                                    <i data-lucide="eye" class="h-3.5 w-3.5"></i> View
+                                </a>
+                                {% if s.status != 'ended' %}
+                                    <form method="post" action="{% url 'admin:session_end' s.id %}" onsubmit="return confirm('End session {{ s.code }}?')">
+                                        {% csrf_token %}
+                                        <button class="admin-btn admin-btn-outline admin-btn-sm hover:border-[#dc2626] hover:bg-red-50 hover:text-[#dc2626]" type="submit">
+                                            <i data-lucide="square" class="h-3.5 w-3.5"></i> End
+                                        </button>
+                                    </form>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="7" class="px-6 py-12 text-center text-sm text-[#5c5c5c]">No sessions found.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% include "admin/_pagination.html" %}
+</div>
+{% endblock %}

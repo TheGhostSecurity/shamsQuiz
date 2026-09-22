@@ -1,0 +1,58 @@
+{% extends "admin/base.html" %}
+{% block page_title %}{% if mode == 'create' %}New user{% else %}Edit {{ edit_user.username }}{% endif %}{% endblock %}
+{% block page_subtitle %}<p class="text-sm text-[#5c5c5c]">{% if mode == 'create' %}Create a new teacher or student account.{% else %}Update account details and permissions.{% endif %}</p>{% endblock %}
+
+{% block panel %}
+<form class="max-w-xl space-y-4" method="post">
+    {% csrf_token %}
+    {% if form.non_field_errors %}
+        <div class="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">{{ form.non_field_errors }}</div>
+    {% endif %}
+    <div class="admin-card space-y-4 p-6">
+        <div class="grid gap-4 sm:grid-cols-2">
+            <div>
+                <label class="admin-label" for="{{ form.username.id_for_label }}">Username</label>
+                {{ form.username }}
+                {% for e in form.username.errors %}<p class="mt-1 text-xs text-red-600">{{ e }}</p>{% endfor %}
+            </div>
+            <div>
+                <label class="admin-label" for="{{ form.email.id_for_label }}">Email</label>
+                {{ form.email }}
+            </div>
+            <div>
+                <label class="admin-label" for="{{ form.first_name.id_for_label }}">First name</label>
+                {{ form.first_name }}
+            </div>
+            <div>
+                <label class="admin-label" for="{{ form.last_name.id_for_label }}">Last name</label>
+                {{ form.last_name }}
+            </div>
+        </div>
+        <div>
+            <label class="admin-label" for="{{ form.role.id_for_label }}">Role</label>
+            {{ form.role }}
+        </div>
+        <div>
+            <label class="admin-label" for="{{ form.password.id_for_label }}">Password{% if mode == 'create' %} *{% endif %}</label>
+            {{ form.password }}
+            {% for e in form.password.errors %}<p class="mt-1 text-xs text-red-600">{{ e }}</p>{% endfor %}
+            {% if form.password.help_text %}<p class="mt-1 text-xs text-[#8c8c8c]">{{ form.password.help_text }}</p>{% endif %}
+        </div>
+        <div class="flex flex-wrap gap-6 border-t border-[#ededed] pt-4">
+            <label class="flex items-center gap-2.5 text-sm font-semibold text-[#424242]">
+                {{ form.is_active }} Account active
+            </label>
+            <label class="flex items-center gap-2.5 text-sm font-semibold text-[#424242]">
+                {{ form.is_staff }} Admin access
+            </label>
+        </div>
+    </div>
+    <div class="flex items-center gap-3">
+        <button class="admin-btn" type="submit">
+            <i data-lucide="save" class="h-4 w-4"></i>
+            {% if mode == 'create' %}Create user{% else %}Save changes{% endif %}
+        </button>
+        <a class="admin-btn admin-btn-outline" href="{% url 'admin:users' %}">Cancel</a>
+    </div>
+</form>
+{% endblock %}

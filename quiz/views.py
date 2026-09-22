@@ -42,12 +42,13 @@ def signup_view(request):
 
 def login_view(request):
     if request.user.is_authenticated:
-        return redirect("dashboard")
+        return redirect("admin:index" if request.user.is_staff else "dashboard")
     if request.method == "POST":
         form = LoginForm(data=request.POST)
         if form.is_valid():
-            login(request, form.get_user())
-            return redirect("dashboard")
+            user = form.get_user()
+            login(request, user)
+            return redirect("admin:index" if user.is_staff else "dashboard")
     else:
         form = LoginForm()
     return render(request, "registration/login.html", {"form": form})
