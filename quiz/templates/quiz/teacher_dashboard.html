@@ -10,15 +10,15 @@
 <div class="mx-auto max-w-6xl px-5 py-8">
     <div class="mb-6 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div>
-            <p class="text-sm font-semibold text-brand-600">Instructor Dashboard</p>
+            <p class="text-sm font-semibold text-[#0067c0]">Instructor Dashboard</p>
             <h1 class="mt-1 text-2xl font-semibold text-black">My Modules</h1>
         </div>
         <div class="flex flex-wrap gap-2">
-            <a class="inline-flex items-center gap-2 rounded-lg border border-[#d6d6d6] bg-white px-4 py-2.5 text-sm font-semibold text-[#0067c0]" href="{% url 'home' %}" title="Preview landing page" target="_blank">
+            <a class="inline-flex items-center gap-2 rounded-md border border-[#c8c8c8] bg-white px-4 py-2.5 text-sm font-semibold text-[#0067c0] hover:bg-[#f7f7f7]" href="{% url 'home' %}" title="Preview landing page" target="_blank">
                 <i data-lucide="play" class="h-4 w-4"></i>
                 Preview site
             </a>
-            <a class="inline-flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-700" href="{% url 'module_create' %}">
+            <a class="inline-flex items-center gap-2 rounded-md bg-[#0067c0] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#005a9e]" href="{% url 'module_create' %}">
                 <i data-lucide="folder-plus" class="h-4 w-4"></i>
                 New module
             </a>
@@ -29,14 +29,14 @@
         <div class="rounded-xl border border-[#e0e0e0] bg-white p-5 shadow-sm">
             <div class="flex items-center justify-between">
                 <p class="text-xs font-semibold text-[#5c5c5c]">Modules</p>
-                <span class="grid h-9 w-9 place-items-center rounded-lg bg-[#f3f0ff] text-brand-600"><i data-lucide="folder" class="h-4 w-4"></i></span>
+                <span class="grid h-9 w-9 place-items-center rounded-lg bg-[#eaf4ff] text-[#0067c0]"><i data-lucide="folder" class="h-4 w-4"></i></span>
             </div>
             <p class="mt-3 text-3xl font-semibold text-black stat-glow">{{ modules|length }}</p>
         </div>
         <div class="rounded-xl border border-[#e0e0e0] bg-white p-5 shadow-sm">
             <div class="flex items-center justify-between">
                 <p class="text-xs font-semibold text-[#5c5c5c]">Total questions</p>
-                <span class="grid h-9 w-9 place-items-center rounded-lg bg-[#fff7e6] text-sun-600"><i data-lucide="list-checks" class="h-4 w-4"></i></span>
+                <span class="grid h-9 w-9 place-items-center rounded-lg bg-[#fff7ed] text-[#c43e1c]"><i data-lucide="list-checks" class="h-4 w-4"></i></span>
             </div>
             <p class="mt-3 text-3xl font-semibold text-black stat-glow">{{ total_questions }}</p>
         </div>
@@ -77,8 +77,8 @@
                     {% for module in modules %}
                         <tr class="hover:bg-[#fafafa]">
                             <td class="px-6 py-4">
-                                <a class="flex items-center gap-3 font-semibold text-black hover:text-brand-700" href="{% url 'module_detail' module.id %}">
-                                    <span class="grid h-9 w-9 place-items-center rounded-lg bg-[#f3f0ff] text-brand-600"><i data-lucide="folder" class="h-4 w-4"></i></span>
+                                <a class="flex items-center gap-3 font-semibold text-black hover:text-[#0067c0]" href="{% url 'module_detail' module.id %}">
+                                    <span class="grid h-9 w-9 place-items-center rounded-lg bg-[#eaf4ff] text-[#0067c0]"><i data-lucide="folder" class="h-4 w-4"></i></span>
                                     <span>
                                         {{ module.title }}
                                         {% if module.description %}<p class="mt-0.5 text-xs font-normal text-[#8c8c8c]">{{ module.description|truncatechars:60 }}</p>{% endif %}
@@ -86,13 +86,13 @@
                                 </a>
                             </td>
                             <td class="px-6 py-4">
-                                <span class="rounded-full bg-[#fff7e6] px-3 py-1 text-xs font-semibold text-sun-600">{{ module.num_questions }} Q</span>
+                                <span class="rounded-full bg-[#fff7ed] px-3 py-1 text-xs font-semibold text-[#c43e1c]">{{ module.num_questions }} Q</span>
                             </td>
                             <td class="px-6 py-4 text-xs text-[#5c5c5c]">{{ module.created_at|date:"M j, Y" }}</td>
                             <td class="px-6 py-4">
                                 <div class="flex items-center gap-2">
-                                    <a class="rounded-lg border border-[#c8c8c8] bg-white px-3 py-1.5 text-xs font-semibold text-[#424242] hover:bg-[#f7f7f7]" href="{% url 'module_detail' module.id %}">Open</a>
-                                    <a class="inline-flex items-center gap-1 rounded-lg bg-[#ecfdf3] px-3 py-1.5 text-xs font-semibold text-[#107c41] hover:bg-[#d5f5e6]" href="{% url 'start_quiz' module.id %}">
+                                    <a class="rounded-md border border-[#c8c8c8] bg-white px-3 py-1.5 text-xs font-semibold text-[#424242] hover:bg-[#f7f7f7]" href="{% url 'module_detail' module.id %}">Open</a>
+                                    <a class="inline-flex items-center gap-1 rounded-md bg-[#ecfdf3] px-3 py-1.5 text-xs font-semibold text-[#107c41] hover:bg-[#d5f5e6]" href="{% url 'start_quiz' module.id %}">
                                         <i data-lucide="play" class="h-3 w-3"></i> Host
                                     </a>
                                 </div>
@@ -101,10 +101,10 @@
                     {% empty %}
                         <tr>
                             <td class="px-6 py-12 text-center text-[#5c5c5c]" colspan="4">
-                                <i data-lucide="folder-open" class="mx-auto mb-3 h-10 w-10 text-[#c9bfee]"></i>
+                                <i data-lucide="folder-open" class="mx-auto mb-3 h-10 w-10 text-[#b7d8ff]"></i>
                                 <p class="font-semibold text-black">No modules yet</p>
                                 <p class="mt-1 text-sm">Create your first module and start adding questions.</p>
-                                <a class="mt-4 inline-flex items-center gap-2 rounded-lg bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-brand-700" href="{% url 'module_create' %}">
+                                <a class="mt-4 inline-flex items-center gap-2 rounded-md bg-[#0067c0] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#005a9e]" href="{% url 'module_create' %}">
                                     <i data-lucide="folder-plus" class="h-4 w-4"></i>
                                     New module
                                 </a>

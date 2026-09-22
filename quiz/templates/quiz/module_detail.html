@@ -8,18 +8,18 @@
 
 {% block content %}
 <div class="mx-auto max-w-4xl px-5 py-8">
-    <a class="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-600 hover:underline" href="{% url 'dashboard' %}">
+    <a class="inline-flex items-center gap-1.5 text-sm font-semibold text-[#0067c0] hover:underline" href="{% url 'dashboard' %}">
         <i data-lucide="arrow-left" class="h-4 w-4"></i> Dashboard
     </a>
 
     <div class="mt-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-            <p class="text-sm font-semibold text-brand-600">Module</p>
+            <p class="text-sm font-semibold text-[#0067c0]">Module</p>
             <h1 class="mt-1 text-2xl font-semibold text-black">{{ module.title }}</h1>
             {% if module.description %}<p class="mt-1 text-sm text-[#5c5c5c]">{{ module.description }}</p>{% endif %}
         </div>
         <div class="flex flex-wrap items-center gap-2">
-            <a class="inline-flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-700" href="{% url 'question_create' module.id %}">
+            <a class="inline-flex items-center gap-2 rounded-lg bg-[#0067c0] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#005a9e]" href="{% url 'question_create' module.id %}">
                 <i data-lucide="plus" class="h-4 w-4"></i>
                 Add question
             </a>
@@ -36,10 +36,10 @@
     </div>
 
     {% if questions %}
-        <div class="mt-6 mb-4 flex items-center gap-2 rounded-xl border border-[#ddd0f7] bg-[#f3f0ff] px-4 py-3 text-sm text-[#4c1d95]">
+        <div class="mt-6 mb-4 flex items-center gap-2 rounded-xl border border-[#b7d8ff] bg-[#eaf4ff] px-4 py-3 text-sm text-[#005a9e]">
             <i data-lucide="play-circle" class="h-5 w-5"></i>
             <span><strong>{{ questions|length }}</strong> question{{ questions|length|pluralize }} ready. Start the quiz to get a join code.</span>
-            <a class="ml-auto inline-flex shrink-0 items-center gap-1 rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-700" href="{% url 'start_quiz' module.id %}">
+            <a class="ml-auto inline-flex shrink-0 items-center gap-1 rounded-lg bg-[#0067c0] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#005a9e]" href="{% url 'start_quiz' module.id %}">
                 <i data-lucide="play" class="h-3 w-3"></i> Host live
             </a>
         </div>
@@ -51,12 +51,12 @@
                 <div class="flex flex-wrap items-start justify-between gap-3">
                     <div class="min-w-0">
                         <div class="flex flex-wrap items-center gap-2">
-                            <span class="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-brand-700 text-xs font-bold text-white">{{ forloop.counter }}</span>
+                            <span class="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-[#005a9e] text-xs font-bold text-white">{{ forloop.counter }}</span>
                             <h3 class="font-semibold text-black">{{ question.text }}</h3>
                         </div>
                         <div class="mt-2 flex flex-wrap items-center gap-2">
                             <span class="rounded-full bg-[#fff7e6] px-2.5 py-0.5 text-xs font-semibold text-sun-600"><i data-lucide="clock" class="mr-0.5 inline h-3 w-3"></i>{{ question.time_limit }}s</span>
-                            <span class="rounded-full bg-[#f3f0ff] px-2.5 py-0.5 text-xs font-semibold text-brand-600"><i data-lucide="star" class="mr-0.5 inline h-3 w-3"></i>{{ question.points }} pts</span>
+                            <span class="rounded-full bg-[#eaf4ff] px-2.5 py-0.5 text-xs font-semibold text-[#0067c0]"><i data-lucide="star" class="mr-0.5 inline h-3 w-3"></i>{{ question.points }} pts</span>
                         </div>
                     </div>
                     <div class="flex items-center gap-2">
@@ -82,7 +82,7 @@
                 <i data-lucide="list-plus" class="mx-auto mb-3 h-10 w-10 text-[#c9bfee]"></i>
                 <h3 class="font-semibold text-black">No questions yet</h3>
                 <p class="mt-1 text-sm text-[#5c5c5c]">Add multiple-choice questions to this module. You can add as many as you like!</p>
-                <a class="mt-4 inline-flex items-center gap-2 rounded-lg bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-brand-700" href="{% url 'question_create' module.id %}">
+                <a class="mt-4 inline-flex items-center gap-2 rounded-lg bg-[#0067c0] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#005a9e]" href="{% url 'question_create' module.id %}">
                     <i data-lucide="plus" class="h-4 w-4"></i>
                     Add the first question
                 </a>

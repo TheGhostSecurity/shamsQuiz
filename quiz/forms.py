@@ -19,13 +19,13 @@ class SignUpForm(UserCreationForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["role"].widget.attrs = {
-            "class": "w-full rounded-md border border-[#d6d6d6] bg-white px-4 py-3 text-sm outline-none focus:border-[#5b21b6] focus:ring-2 focus:ring-[#ddd0f7]"
+            "class": "w-full rounded-md border border-[#d6d6d6] bg-white px-4 py-3 text-sm outline-none focus:border-[#0067c0] focus:ring-2 focus:ring-[#b7d8ff]"
         }
         for name, field in self.fields.items():
             if hasattr(field.widget, "render"):
                 field.widget.attrs.update(
                     {
-                        "class": "w-full rounded-md border border-[#d6d6d6] px-4 py-3 text-sm outline-none focus:border-[#5b21b6] focus:ring-2 focus:ring-[#ddd0f7]"
+                        "class": "w-full rounded-md border border-[#d6d6d6] px-4 py-3 text-sm outline-none focus:border-[#0067c0] focus:ring-2 focus:ring-[#b7d8ff]"
                     }
                 )
 
@@ -41,13 +41,13 @@ class ModuleForm(forms.ModelForm):
         widgets = {
             "title": forms.TextInput(
                 attrs={
-                    "class": "w-full rounded-md border border-[#d6d6d6] px-4 py-3 text-sm outline-none focus:border-[#5b21b6] focus:ring-2 focus:ring-[#ddd0f7]",
+                    "class": "w-full rounded-md border border-[#d6d6d6] px-4 py-3 text-sm outline-none focus:border-[#0067c0] focus:ring-2 focus:ring-[#b7d8ff]",
                     "placeholder": "e.g. Networking Fundamentals",
                 }
             ),
             "description": forms.Textarea(
                 attrs={
-                    "class": "w-full rounded-md border border-[#d6d6d6] px-4 py-3 text-sm outline-none focus:border-[#5b21b6] focus:ring-2 focus:ring-[#ddd0f7]",
+                    "class": "w-full rounded-md border border-[#d6d6d6] px-4 py-3 text-sm outline-none focus:border-[#0067c0] focus:ring-2 focus:ring-[#b7d8ff]",
                     "rows": 3,
                     "placeholder": "Optional description of the module",
                 }
@@ -88,27 +88,27 @@ class QuestionForm(forms.ModelForm):
         widgets = {
             "text": forms.Textarea(
                 attrs={
-                    "class": "w-full rounded-md border border-[#d6d6d6] px-4 py-3 text-sm outline-none focus:border-[#5b21b6] focus:ring-2 focus:ring-[#ddd0f7]",
+                    "class": "w-full rounded-md border border-[#d6d6d6] px-4 py-3 text-sm outline-none focus:border-[#0067c0] focus:ring-2 focus:ring-[#b7d8ff]",
                     "rows": 3,
                     "placeholder": "Type your question here...",
                 }
             ),
             "time_limit": forms.NumberInput(
                 attrs={
-                    "class": "w-full rounded-md border border-[#d6d6d6] px-4 py-3 text-sm outline-none focus:border-[#5b21b6] focus:ring-2 focus:ring-[#ddd0f7]",
+                    "class": "w-full rounded-md border border-[#d6d6d6] px-4 py-3 text-sm outline-none focus:border-[#0067c0] focus:ring-2 focus:ring-[#b7d8ff]",
                     "min": 5,
                     "max": 300,
                 }
             ),
             "points": forms.NumberInput(
                 attrs={
-                    "class": "w-full rounded-md border border-[#d6d6d6] px-4 py-3 text-sm outline-none focus:border-[#5b21b6] focus:ring-2 focus:ring-[#ddd0f7]",
+                    "class": "w-full rounded-md border border-[#d6d6d6] px-4 py-3 text-sm outline-none focus:border-[#0067c0] focus:ring-2 focus:ring-[#b7d8ff]",
                     "min": 0,
                 }
             ),
         }
 
-    CHOICE_CLASS = "w-full rounded-md border border-[#d6d6d6] px-4 py-3 text-sm outline-none focus:border-[#5b21b6] focus:ring-2 focus:ring-[#ddd0f7]"
+    CHOICE_CLASS = "w-full rounded-md border border-[#d6d6d6] px-4 py-3 text-sm outline-none focus:border-[#0067c0] focus:ring-2 focus:ring-[#b7d8ff]"
 
     def __init__(self, *args, **kwargs):
         self.question = kwargs.pop("question", None)
@@ -156,7 +156,7 @@ class JoinForm(forms.Form):
         max_length=6,
         widget=forms.TextInput(
             attrs={
-                "class": "w-full rounded-md border border-[#d6d6d6] px-4 py-3 text-center text-xl font-bold uppercase tracking-[0.4em] outline-none focus:border-[#5b21b6] focus:ring-2 focus:ring-[#ddd0f7]",
+                "class": "w-full rounded-md border border-[#d6d6d6] px-4 py-3 text-center text-xl font-bold uppercase tracking-[0.4em] outline-none focus:border-[#0067c0] focus:ring-2 focus:ring-[#b7d8ff]",
                 "placeholder": "ABC123",
                 "maxlength": "6",
                 "autocomplete": "off",
@@ -182,7 +182,7 @@ class JoinNameForm(forms.Form):
         max_length=100,
         widget=forms.TextInput(
             attrs={
-                "class": "w-full rounded-md border border-[#d6d6d6] px-4 py-3 text-center text-xl font-bold outline-none focus:border-[#5b21b6] focus:ring-2 focus:ring-[#ddd0f7]",
+                "class": "w-full rounded-md border border-[#d6d6d6] px-4 py-3 text-center text-xl font-bold outline-none focus:border-[#0067c0] focus:ring-2 focus:ring-[#b7d8ff]",
                 "placeholder": "Enter your name",
             }
         ),

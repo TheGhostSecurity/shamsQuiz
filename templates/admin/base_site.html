@@ -4,55 +4,55 @@
     {{ block.super }}
     <style>
         :root {
-            --primary: #6d28d9;
-            --primary-hover: #5b21b6;
-            --secondary: #4c1d95;
-            --accent: #f59e0b;
-            --link-fg: #6d28d9;
-            --link-selected-fg: #5b21b6;
-            --header-bg: #120b2e;
+            --primary: #0067c0;
+            --primary-hover: #005a9e;
+            --secondary: #005a9e;
+            --accent: #37a5ff;
+            --link-fg: #0067c0;
+            --link-selected-fg: #005a9e;
+            --header-bg: #001f2e;
             --header-height: 56px;
-            --breadcrumbs-bg: #3b0f7a;
-            --sidebar-bg: #170e38;
-            --body-bg: #f7f7fb;
+            --breadcrumbs-bg: #002b3f;
+            --sidebar-bg: #002b3f;
+            --body-bg: #f7f7f7;
         }
         .shams-logo {
             display: inline-block;
             width: 26px;
             height: 26px;
             margin-right: 8px;
-            border-radius: 8px;
-            background: linear-gradient(135deg, #fbbf24, #f59e0b);
-            box-shadow: 0 2px 10px rgba(245, 158, 11, .5);
+            border-radius: 50%;
+            background: linear-gradient(135deg, #54b6ff, #37a5ff);
+            box-shadow: 0 2px 10px rgba(0, 103, 192, .5);
             vertical-align: middle;
             position: relative;
         }
         .shams-logo::after {
             content: '';
             position: absolute;
-            inset: 6px;
+            inset: 7px;
             border-radius: 50%;
-            background: #7b3f00;
+            background: #005a9e;
         }
         @media (prefers-color-scheme: dark) {
             :root {
-                --primary: #9470fb;
-                --primary-hover: #b7a1ff;
-                --secondary: #b7a1ff;
-                --accent: #fbbf24;
-                --link-fg: #b7a1ff;
-                --link-selected-fg: #d5c9ff;
-                --header-bg: #0b051e;
-                --breadcrumbs-bg: #2a0f68;
-                --sidebar-bg: #100a2c;
-                --body-bg: #15102b;
+                --primary: #54b6ff;
+                --primary-hover: #37a5ff;
+                --secondary: #93c5fd;
+                --accent: #37a5ff;
+                --link-fg: #93c5fd;
+                --link-selected-fg: #b7d8ff;
+                --header-bg: #001f2e;
+                --breadcrumbs-bg: #002b3f;
+                --sidebar-bg: #002b3f;
+                --body-bg: #0b1622;
             }
         }
         #header {
-            background: linear-gradient(90deg, #120b2e, #3b0f7a);
+            background: linear-gradient(90deg, #001f2e, #005a9e);
         }
         #branding h1 a:link, #branding h1 a:visited {
-            color: #f5f3ff;
+            color: #eaf4ff;
             font-weight: 700;
             letter-spacing: .3px;
         }
@@ -73,11 +73,11 @@
             color: #fff;
             border-radius: 8px;
         }
-        .module { border: 1px solid #e8e4f5; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.04); }
+        .module { border: 1px solid #e5edf5; border-radius: 12px; box-shadow: 0 1px 3px rgba(0, 0, 0, .04); }
         .module table { border-radius: 10px; overflow: hidden; }
         .aligned label { color: #242424; }
         .welcome-banner {
-            background: linear-gradient(120deg, #120b2e, #4c1d95 55%, #7b3f00);
+            background: linear-gradient(120deg, #001f2e, #0067c0 55%, #54b6ff);
             color: #fff;
             border-radius: 14px;
             padding: 20px 24px;
@@ -85,26 +85,30 @@
             display: flex;
             align-items: center;
             gap: 16px;
-            box-shadow: 0 8px 24px rgba(76, 29, 149, .25);
+            box-shadow: 0 8px 24px rgba(0, 103, 192, .25);
         }
         .welcome-banner .sun {
             flex: 0 0 auto;
-            width: 52px; height: 52px;
-            border-radius: 14px;
-            background: linear-gradient(135deg, #fbbf24, #f59e0b);
-            display: grid; place-items: center;
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #54b6ff, #37a5ff);
+            display: grid;
+            place-items: center;
+            box-shadow: 0 2px 10px rgba(0, 103, 192, .5);
         }
         .welcome-banner .sun:before {
             content: '';
-            width: 18px; height: 18px;
+            width: 18px;
+            height: 18px;
             border-radius: 50%;
-            background: #7b3f00;
+            background: #005a9e;
         }
         .welcome-banner h2 { margin: 0 0 4px; font-size: 20px; font-weight: 800; color: #fff; }
-        .welcome-banner p { margin: 0; color: rgba(255,255,255,.75); font-size: 13px; }
+        .welcome-banner p { margin: 0; color: rgba(255, 255, 255, .8); font-size: 13px; }
         @media (prefers-color-scheme: dark) {
-            .module { border-color: #2a2450; }
-            .aligned label { color: #e4e4f0; }
+            .module { border-color: #16324a; }
+            .aligned label { color: #dbeafe; }
         }
     </style>
 {% endblock %}

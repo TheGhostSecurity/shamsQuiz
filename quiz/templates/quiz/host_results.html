@@ -1,80 +1,62 @@
 {% extends "base.html" %}
 
 {% block title %}Results · {{ session.code }} · ShamsQuiz{% endblock %}
-{% block body_class %}bg-[#120b2e] text-white antialiased{% endblock %}
+{% block body_class %}bg-[#001f2e] text-white antialiased{% endblock %}
 {% block main_class %}min-h-screen{% endblock %}
+{% block messages_wrap %}mx-auto mt-4 max-w-6xl space-y-2 px-4{% endblock %}
 
 {% block content %}
 <div class="flex min-h-screen flex-col">
-    <header class="flex items-center justify-between border-b border-white/10 px-5 py-3">
-        <div class="flex items-center gap-3">
-            <span class="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-sun-400 to-sun-600 text-white">
+    <header class="flex items-center justify-between border-b border-white/10 bg-[#002b3f] px-5 py-4">
+        <div class="flex items-center gap-2.5">
+            <span class="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-[#54b6ff] to-[#0078d4] text-white">
                 <i data-lucide="sun" class="h-4 w-4"></i>
             </span>
-            <p class="text-sm font-bold">{{ session.module.title }} — <span class="text-white/60">final results</span></p>
+            <span class="font-bold">ShamsQuiz &mdash; Results</span>
         </div>
-        <a class="inline-flex items-center gap-2 rounded-lg bg-sun-500 px-4 py-2 text-sm font-black text-[#120b2e] hover:bg-sun-400" href="{% url 'host_results' session.code %}">
-            <i data-lucide="refresh" class="h-4 w-4"></i> Refresh
-        </a>
+        <div class="flex items-center gap-3">
+            <span class="rounded-lg bg-white/10 px-3 py-1.5 text-sm font-bold tracking-widest">{{ session.code }}</span>
+            <a class="rounded-lg border border-white/20 px-3 py-1.5 text-sm font-semibold text-white/70 hover:bg-white/10" href="{% url 'dashboard' %}">Dashboard</a>
+        </div>
     </header>
 
-    <main class="mx-auto flex w-full max-w-4xl flex-1 flex-col px-5 py-10">
-        {% if leaderboard %}
-            <div class="grid grid-cols-3 items-end gap-3" id="podium">
-                {% for player in leaderboard %}
-                    {% if forloop.counter0 == 1 %}
-                        <div class="text-center">
-                            <span class="inline-grid h-16 w-16 place-items-center rounded-full bg-[#0e4d35] text-2xl font-black text-[#28e38e] ring-4 ring-[#28e38e]/30">{{ player.name|slice:":1"|upper }}</span>
-                            <p class="mt-3 truncate text-base font-bold">2. {{ player.name }}</p>
-                            <p class="text-sm font-black text-[#28e38e]">{{ player.score }} pts</p>
-                            <div class="mx-auto mt-2 h-16 rounded-t-xl bg-[#28e38e]/20"></div>
-                        </div>
-                    {% elif forloop.counter0 == 2 %}
-                        <div class="text-center">
-                            <span class="inline-grid h-16 w-16 place-items-center rounded-full bg-[#7a5a00] text-2xl font-black text-sun-400 ring-4 ring-sun-400/30">{{ player.name|slice:":1"|upper }}</span>
-                            <p class="mt-3 truncate text-base font-bold">3. {{ player.name }}</p>
-                            <p class="text-sm font-black text-sun-400">{{ player.score }} pts</p>
-                            <div class="mx-auto mt-2 h-12 rounded-t-xl bg-sun-400/20"></div>
-                        </div>
-                    {% endif %}
-                {% endfor %}
-            </div>
+    <main class="mx-auto w-full max-w-4xl flex-1 px-5 py-10">
+        <p class="text-center text-sm font-semibold uppercase tracking-[0.2em] text-[#93c5fd]">{{ session.module.title }}</p>
+        <h1 class="mt-2 text-center text-3xl font-black">Final results</h1>
 
-            <div class="mx-auto mt-6 flex w-full max-w-xl flex-col items-center justify-center gap-3 rounded-3xl border border-sun-400/30 bg-gradient-to-b from-sun-500/20 to-sun-500/5 px-8 py-10 text-center">
-                {% with winner=leaderboard.0 %}
-                    <span class="grid h-20 w-20 place-items-center rounded-full bg-sun-500 text-3xl font-black text-[#120b2e] shadow-xl shadow-sun-500/40">
-                        {{ winner.name|slice:":1"|upper }}
-                    </span>
-                    <div>
-                        <p class="text-2xl font-black">{{ winner.name }}</p>
-                        <p class="mt-1 text-sm font-bold text-sun-400">{{ winner.score }} points</p>
+        <div class="mt-10">
+            {% for player in podium %}
+                {% if forloop.first %}
+                    <div class="mb-8 text-center">
+                        <div class="mx-auto grid h-24 w-24 place-items-center rounded-full bg-[#d99322]/20 text-4xl font-black text-[#d99322] ring-4 ring-[#d99322]/40">
+                            {{ player.name|slice:":1"|upper }}
+                        </div>
+                        <p class="mt-3 text-xl font-black">{{ player.name }}</p>
+                        <p class="text-sm font-bold text-[#d99322]">{{ player.score }} pts</p>
+                        <span class="mt-1 inline-block rounded-full bg-[#d99322]/15 px-3 py-1 text-xs font-bold uppercase tracking-widest text-[#d99322]">1st place</span>
                     </div>
-                    <span class="rounded-full bg-white/10 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-sun-400">1st place</span>
-                {% endwith %}
-            </div>
+                {% endif %}
+            {% endfor %}
 
-            <div class="mt-8 overflow-hidden rounded-2xl border border-white/10 bg-white/5">
-                <ul class="divide-y divide-white/10">
-                    {% for player in leaderboard %}
-                        <li class="flex items-center gap-4 px-5 py-3 {% if forloop.first %}bg-white/5{% endif %}">
-                            <span class="w-8 text-center text-lg font-black {% if forloop.first %}text-sun-400{% else %}text-white/50{% endif %}">{{ forloop.counter }}</span>
-                            <span class="grid h-9 w-9 place-items-center rounded-full bg-brand-500 text-xs font-bold">{{ player.name|slice:":2"|upper }}</span>
-                            <span class="min-w-0 flex-1 truncate font-semibold">{{ player.name }}</span>
-                            <span class="font-black text-[#28e38e]">{{ player.score }} pts</span>
-                        </li>
-                    {% endfor %}
-                </ul>
-            </div>
-        {% else %}
-            <div class="text-center">
-                <i data-lucide="users" class="mx-auto mb-3 h-12 w-12 text-white/30"></i>
-                <p class="font-bold">No players joined this quiz.</p>
-            </div>
-        {% endif %}
+            <ul class="mx-auto max-w-xl space-y-1.5 rounded-3xl border border-white/10 bg-white/5 p-4">
+                {% for player in podium %}
+                    <li class="flex items-center gap-4 rounded-2xl px-4 py-3 {% if forloop.first %}bg-[#d99322]/10{% else %}bg-white/5{% endif %}">
+                        <span class="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#0067c0] text-sm font-bold">
+                            {{ player.name|slice:":1"|upper }}
+                        </span>
+                        <span class="font-semibold">{{ player.name }}</span>
+                        <span class="ml-auto text-xs font-bold text-white/50">#{{ forloop.counter }}</span>
+                        <span class="font-black text-white">{{ player.score }} pts</span>
+                    </li>
+                {% empty %}
+                    <li class="px-4 py-10 text-center text-white/60">No players joined this quiz.</li>
+                {% endfor %}
+            </ul>
+        </div>
 
-        <div class="mt-10 flex flex-wrap items-center justify-center gap-3">
-            <a class="rounded-2xl bg-brand-600 px-6 py-3 text-sm font-black text-white hover:bg-brand-700" href="{% url 'dashboard' %}">
-                <i data-lucide="layout-dashboard" class="mr-1 inline h-4 w-4"></i> Back to dashboard
+        <div class="mt-10 text-center">
+            <a class="inline-flex items-center gap-2 rounded-2xl bg-[#0078d4] px-8 py-4 text-base font-black text-white shadow-xl shadow-[#0078d4]/40 hover:bg-[#37a5ff]" href="{% url 'start_quiz' session.module.id %}">
+                <i data-lucide="rotate-ccw" class="h-4 w-4"></i> Play again
             </a>
         </div>
     </main>

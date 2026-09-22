@@ -8,13 +8,13 @@
 
 {% block content %}
 <div class="mx-auto max-w-2xl px-5 py-8">
-    <a class="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-600 hover:underline" href="{% url 'module_detail' module.id %}">
+    <a class="inline-flex items-center gap-1.5 text-sm font-semibold text-[#0067c0] hover:underline" href="{% url 'module_detail' module.id %}">
         <i data-lucide="arrow-left" class="h-4 w-4"></i> {{ module.title }}
     </a>
 
     <div class="mt-4 rounded-xl border border-[#e7e7e7] bg-white p-6 shadow-sm sm:p-8">
         <div class="mb-6 flex items-center gap-3">
-            <span class="grid h-11 w-11 place-items-center rounded-xl bg-[#f3f0ff] text-brand-600">
+            <span class="grid h-11 w-11 place-items-center rounded-xl bg-[#eaf4ff] text-[#0067c0]">
                 <i data-lucide="{% if mode == 'create' %}plus-circle{% else %}circle-pen{% endif %}" class="h-5 w-5"></i>
             </span>
             <div>
@@ -27,7 +27,7 @@
 
             <div>
                 <label class="mb-1 block text-sm font-semibold text-[#424242]" for="{{ form.text.id_for_label }}">{{ form.text.label }}</label>
-                <div class="[&_textarea]:w-full [&_textarea]:rounded-md [&_textarea]:border [&_textarea]:border-[#d6d6d6] [&_textarea]:px-4 [&_textarea]:py-3 [&_textarea]:text-sm [&_textarea]:outline-none [&_textarea:focus]:border-[#6d28d9] [&_textarea:focus]:ring-2 [&_textarea:focus]:ring-[#ddd0f7]">
+                <div class="[&_textarea]:w-full [&_textarea]:rounded-md [&_textarea]:border [&_textarea]:border-[#d6d6d6] [&_textarea]:px-4 [&_textarea]:py-3 [&_textarea]:text-sm [&_textarea]:outline-none [&_textarea:focus]:border-[#0067c0] [&_textarea:focus]:ring-2 [&_textarea:focus]:ring-[#b7d8ff]">
                     {{ form.text }}
                 </div>
                 {% for error in form.text.errors %}<p class="mt-1 text-sm text-red-600">{{ error }}</p>{% endfor %}
@@ -37,27 +37,27 @@
                 <p class="mb-2 text-sm font-semibold text-[#424242]">Choices</p>
                 <div class="grid gap-2 sm:grid-cols-2">
                     <div class="flex items-center gap-2">
-                        <span class="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-[#f3f0ff] text-sm font-bold text-brand-700">A</span>
+                        <span class="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-[#eaf4ff] text-sm font-bold text-[#005a9e]">A</span>
                         <div class="w-full">
-                            <div class="[&_input]:w-full [&_input]:rounded-md [&_input]:border [&_input]:border-[#d6d6d6] [&_input]:px-3 [&_input]:py-2.5 [&_input]:text-sm [&_input]:outline-none [&_input:focus]:border-[#6d28d9] [&_input:focus]:ring-2 [&_input:focus]:ring-[#ddd0f7]">{{ form.choice_1 }}</div>
+                            <div class="[&_input]:w-full [&_input]:rounded-md [&_input]:border [&_input]:border-[#d6d6d6] [&_input]:px-3 [&_input]:py-2.5 [&_input]:text-sm [&_input]:outline-none [&_input:focus]:border-[#0067c0] [&_input:focus]:ring-2 [&_input:focus]:ring-[#b7d8ff]">{{ form.choice_1 }}</div>
                         </div>
                     </div>
                     <div class="flex items-center gap-2">
-                        <span class="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-[#f3f0ff] text-sm font-bold text-brand-700">B</span>
+                        <span class="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-[#eaf4ff] text-sm font-bold text-[#005a9e]">B</span>
                         <div class="w-full">
-                            <div class="[&_input]:w-full [&_input]:rounded-md [&_input]:border [&_input]:border-[#d6d6d6] [&_input]:px-3 [&_input]:py-2.5 [&_input]:text-sm [&_input]:outline-none [&_input:focus]:border-[#6d28d9] [&_input:focus]:ring-2 [&_input:focus]:ring-[#ddd0f7]">{{ form.choice_2 }}</div>
+                            <div class="[&_input]:w-full [&_input]:rounded-md [&_input]:border [&_input]:border-[#d6d6d6] [&_input]:px-3 [&_input]:py-2.5 [&_input]:text-sm [&_input]:outline-none [&_input:focus]:border-[#0067c0] [&_input:focus]:ring-2 [&_input:focus]:ring-[#b7d8ff]">{{ form.choice_2 }}</div>
                         </div>
                     </div>
                     <div class="flex items-center gap-2">
-                        <span class="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-[#f3f0ff] text-sm font-bold text-brand-700">C</span>
+                        <span class="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-[#eaf4ff] text-sm font-bold text-[#005a9e]">C</span>
                         <div class="w-full">
-                            <div class="[&_input]:w-full [&_input]:rounded-md [&_input]:border [&_input]:border-[#d6d6d6] [&_input]:px-3 [&_input]:py-2.5 [&_input]:text-sm [&_input]:outline-none [&_input:focus]:border-[#6d28d9] [&_input:focus]:ring-2 [&_input:focus]:ring-[#ddd0f7]">{{ form.choice_3 }}</div>
+                            <div class="[&_input]:w-full [&_input]:rounded-md [&_input]:border [&_input]:border-[#d6d6d6] [&_input]:px-3 [&_input]:py-2.5 [&_input]:text-sm [&_input]:outline-none [&_input:focus]:border-[#0067c0] [&_input:focus]:ring-2 [&_input:focus]:ring-[#b7d8ff]">{{ form.choice_3 }}</div>
                         </div>
                     </div>
                     <div class="flex items-center gap-2">
-                        <span class="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-[#f3f0ff] text-sm font-bold text-brand-700">D</span>
+                        <span class="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-[#eaf4ff] text-sm font-bold text-[#005a9e]">D</span>
                         <div class="w-full">
-                            <div class="[&_input]:w-full [&_input]:rounded-md [&_input]:border [&_input]:border-[#d6d6d6] [&_input]:px-3 [&_input]:py-2.5 [&_input]:text-sm [&_input]:outline-none [&_input:focus]:border-[#6d28d9] [&_input:focus]:ring-2 [&_input:focus]:ring-[#ddd0f7]">{{ form.choice_4 }}</div>
+                            <div class="[&_input]:w-full [&_input]:rounded-md [&_input]:border [&_input]:border-[#d6d6d6] [&_input]:px-3 [&_input]:py-2.5 [&_input]:text-sm [&_input]:outline-none [&_input:focus]:border-[#0067c0] [&_input:focus]:ring-2 [&_input:focus]:ring-[#b7d8ff]">{{ form.choice_4 }}</div>
                         </div>
                     </div>
                 </div>
@@ -69,19 +69,19 @@
             <div class="grid gap-4 sm:grid-cols-3">
                 <div class="sm:col-span-1">
                     <label class="mb-1 block text-sm font-semibold text-[#424242]" for="{{ form.correct_choice.id_for_label }}">{{ form.correct_choice.label }}</label>
-                    <div class="[&_select]:w-full [&_select]:rounded-md [&_select]:border [&_select]:border-[#d6d6d6] [&_select]:px-3 [&_select]:py-2.5 [&_select]:text-sm [&_select]:outline-none [&_select:focus]:border-[#6d28d9] [&_select:focus]:ring-2 [&_select:focus]:ring-[#ddd0f7]">
+                    <div class="[&_select]:w-full [&_select]:rounded-md [&_select]:border [&_select]:border-[#d6d6d6] [&_select]:px-3 [&_select]:py-2.5 [&_select]:text-sm [&_select]:outline-none [&_select:focus]:border-[#0067c0] [&_select:focus]:ring-2 [&_select:focus]:ring-[#b7d8ff]">
                         {{ form.correct_choice }}
                     </div>
                 </div>
                 <div>
                     <label class="mb-1 block text-sm font-semibold text-[#424242]" for="{{ form.time_limit.id_for_label }}">{{ form.time_limit.label }} (s)</label>
-                    <div class="[&_input]:w-full [&_input]:rounded-md [&_input]:border [&_input]:border-[#d6d6d6] [&_input]:px-3 [&_input]:py-2.5 [&_input]:text-sm [&_input]:outline-none [&_input:focus]:border-[#6d28d9] [&_input:focus]:ring-2 [&_input:focus]:ring-[#ddd0f7]">
+                    <div class="[&_input]:w-full [&_input]:rounded-md [&_input]:border [&_input]:border-[#d6d6d6] [&_input]:px-3 [&_input]:py-2.5 [&_input]:text-sm [&_input]:outline-none [&_input:focus]:border-[#0067c0] [&_input:focus]:ring-2 [&_input:focus]:ring-[#b7d8ff]">
                         {{ form.time_limit }}
                     </div>
                 </div>
                 <div>
                     <label class="mb-1 block text-sm font-semibold text-[#424242]" for="{{ form.points.id_for_label }}">{{ form.points.label }}</label>
-                    <div class="[&_input]:w-full [&_input]:rounded-md [&_input]:border [&_input]:border-[#d6d6d6] [&_input]:px-3 [&_input]:py-2.5 [&_input]:text-sm [&_input]:outline-none [&_input:focus]:border-[#6d28d9] [&_input:focus]:ring-2 [&_input:focus]:ring-[#ddd0f7]">
+                    <div class="[&_input]:w-full [&_input]:rounded-md [&_input]:border [&_input]:border-[#d6d6d6] [&_input]:px-3 [&_input]:py-2.5 [&_input]:text-sm [&_input]:outline-none [&_input:focus]:border-[#0067c0] [&_input:focus]:ring-2 [&_input:focus]:ring-[#b7d8ff]">
                         {{ form.points }}
                     </div>
                 </div>
@@ -89,7 +89,7 @@
             <p class="text-xs text-[#8c8c8c]">Scoring: full points for a correct answer, scaled by how fast it was submitted. The timer starts when you reveal the question live.</p>
 
             <div class="flex items-center gap-3 pt-2">
-                <button class="rounded-lg bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-brand-700" type="submit">
+                <button class="rounded-lg bg-[#0067c0] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#005a9e]" type="submit">
                     {% if mode == 'create' %}Add question{% else %}Save changes{% endif %}
                 </button>
                 <a class="rounded-lg border border-[#c8c8c8] bg-white px-5 py-2.5 text-sm font-semibold text-[#424242] hover:bg-[#f7f7f7]" href="{% url 'module_detail' module.id %}">Cancel</a>

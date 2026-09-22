@@ -10,10 +10,10 @@
 <div class="mx-auto max-w-6xl px-5 py-8">
     <div class="mb-6 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div>
-            <p class="text-sm font-semibold text-brand-600">Student</p>
+            <p class="text-sm font-semibold text-[#0067c0]">Student</p>
             <h1 class="mt-1 text-2xl font-semibold text-black">Ready to play, {{ request.user.first_name|default:request.user.username }}?</h1>
         </div>
-        <a class="inline-flex items-center gap-2 rounded-lg bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-brand-700" href="{% url 'join' %}">
+        <a class="inline-flex items-center gap-2 rounded-lg bg-[#0067c0] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#005a9e]" href="{% url 'join' %}">
             <i data-lucide="gamepad-2" class="h-4 w-4"></i>
             Join a quiz now
         </a>
@@ -21,14 +21,14 @@
 
     <section class="rounded-2xl bg-gradient-to-br from-brand-700 to-brand-900 p-8 text-white shadow-xl shadow-brand-600/20">
         <div class="flex flex-col gap-6 sm:flex-row sm:items-center">
-            <span class="grid h-16 w-16 shrink-0 place-items-center rounded-2xl bg-sun-500 text-[#3b0f7a]">
+            <span class="grid h-16 w-16 shrink-0 place-items-center rounded-2xl bg-[#d99322] text-[#002b3f]">
                 <i data-lucide="sun" class="h-8 w-8"></i>
             </span>
             <div class="flex-1">
                 <h2 class="text-xl font-black">Join the action</h2>
                 <p class="mt-1 text-sm text-white/75">Ask your teacher for the game code, enter it, and you'll jump straight into the live quiz. No account needed for players!</p>
             </div>
-            <a class="shrink-0 rounded-xl bg-white px-6 py-3 text-sm font-black text-brand-800 hover:bg-sun-400" href="{% url 'join' %}">
+            <a class="shrink-0 rounded-xl bg-white px-6 py-3 text-sm font-black text-[#004f8f] transition hover:bg-[#37a5ff] hover:text-white" href="{% url 'join' %}">
                 Enter code →
             </a>
         </div>
@@ -44,7 +44,7 @@
                 {% for p in top_scores %}
                     <li class="flex items-center gap-4 px-5 py-3">
                         <span class="w-7 text-center text-lg font-black text-[#8c8c8c]">{{ forloop.counter }}</span>
-                        <span class="grid h-9 w-9 place-items-center rounded-full bg-[#f3f0ff] text-xs font-bold text-brand-600">{{ p.name|slice:":1"|upper }}</span>
+                        <span class="grid h-9 w-9 place-items-center rounded-full bg-[#eaf4ff] text-xs font-bold text-[#0067c0]">{{ p.name|slice:":1"|upper }}</span>
                         <span class="font-semibold text-black">{{ p.name }}</span>
                         <span class="ml-auto rounded-full bg-[#fff7e6] px-3 py-1 text-xs font-bold text-sun-600">{{ p.score }} pts</span>
                     </li>

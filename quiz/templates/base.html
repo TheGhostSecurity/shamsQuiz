@@ -13,12 +13,13 @@
                 extend: {
                     colors: {
                         brand: {
-                            50: '#f3f0ff', 100: '#e9e3ff', 200: '#d5c9ff',
-                            300: '#b7a1ff', 400: '#9470fb', 500: '#7c3aed',
-                            600: '#6d28d9', 700: '#5b21b6', 800: '#4c1d95',
-                            900: '#3b0f7a',
+                            50: '#eaf4ff', 100: '#d8ecff', 200: '#b7d8ff',
+                            300: '#93c5fd', 400: '#37a5ff', 500: '#0078d4',
+                            600: '#0067c0', 700: '#005a9e', 800: '#004f8f',
+                            900: '#003a6b',
                         },
-                        sun: {400: '#fbbf24', 500: '#f59e0b', 600: '#d97706'},
+                        sun: {400: '#e8a63d', 500: '#d99322', 600: '#c47019'},
+                        navy: {800: '#002b3f', 900: '#001f2e'},
                     },
                 },
             },
@@ -32,9 +33,9 @@
     {% if messages %}
         <div class="{% block messages_wrap %}mx-auto mt-4 max-w-6xl space-y-2 px-4{% endblock %}">
             {% for message in messages %}
-                <div class="flex items-center justify-between gap-3 rounded-lg border border-[#d5c9ff] bg-[#f3f0ff] px-4 py-3 text-sm text-[#4c1d95]">
+                <div class="flex items-center justify-between gap-3 rounded-lg border border-[#b7d8ff] bg-[#eaf4ff] px-4 py-3 text-sm text-[#005a9e]">
                     <span>{{ message }}</span>
-                    <button class="shrink-0 text-[#6d28d9] hover:text-[#3b0f7a]" onclick="this.parentElement.remove()" type="button">
+                    <button class="shrink-0 text-[#0067c0] hover:text-[#002b3f]" onclick="this.parentElement.remove()" type="button">
                         <i data-lucide="x" class="h-4 w-4"></i>
                     </button>
                 </div>
