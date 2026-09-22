@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block title %}Quiz ended · ShamsQuiz{% endblock %}
+{% block body_class %}bg-[#120b2e] text-white antialiased{% endblock %}
+{% block main_class %}min-h-screen{% endblock %}
+
+{% block content %}
+<div class="flex min-h-screen items-center justify-center px-5">
+    <div class="w-full max-w-md rounded-3xl border border-white/10 bg-white/5 p-10 text-center backdrop-blur">
+        <span class="mx-auto grid h-16 w-16 place-items-center rounded-full bg-[#e0345d] text-white">
+            <i data-lucide="flag" class="h-8 w-8"></i>
+        </span>
+        <h1 class="mt-5 text-2xl font-black">This quiz has ended</h1>
+        <p class="mt-2 text-sm text-white/60">{{ session.module.title }} · code {{ session.code }} is no longer accepting players.</p>
+        <a class="mt-6 inline-flex w-full items-center justify-center rounded-2xl bg-sun-500 py-3.5 text-base font-black text-[#120b2e] hover:bg-sun-400" href="{% url 'join' %}">
+            Join another quiz
+        </a>
+    </div>
+</div>
+{% endblock %}

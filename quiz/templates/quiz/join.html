@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}Join a quiz · ShamsQuiz{% endblock %}
+{% block body_class %}bg-[#120b2e] text-white antialiased{% endblock %}
+{% block main_class %}min-h-screen{% endblock %}
+
+{% block content %}
+<div class="flex min-h-screen flex-col">
+    <header class="flex items-center justify-between border-b border-white/10 px-5 py-4">
+        <a class="flex items-center gap-2.5" href="{% url 'home' %}">
+            <span class="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-sun-400 to-sun-600 text-white">
+                <i data-lucide="sun" class="h-5 w-5"></i>
+            </span>
+            <span class="font-bold">ShamsQuiz</span>
+        </a>
+        <a class="text-sm font-semibold text-white/60 hover:text-white" href="{% url 'home' %}">Back to home</a>
+    </header>
+
+    <main class="flex flex-1 items-center justify-center px-5 py-12">
+        <div class="w-full max-w-xl">
+            <div class="rounded-3xl border border-white/10 bg-white/5 p-8 backdrop-blur sm:p-10">
+                <span class="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-sun-500 text-[#120b2e]">
+                    <i data-lucide="gamepad-2" class="h-7 w-7"></i>
+                </span>
+                <h1 class="mt-5 text-center text-2xl font-black">Join a live quiz</h1>
+                <p class="mt-2 text-center text-sm text-white/60">Enter the game code your teacher shared to start playing.</p>
+
+                <form method="post" class="mt-7">
+                    {% csrf_token %}
+                    <div class="mx-auto max-w-sm text-center">
+                        <label class="mb-2 block text-xs font-bold uppercase tracking-widest text-white/50" for="{{ form.code.id_for_label }}">{{ form.code.label }}</label>
+                        <div class="[&_input]:text-center [&_input]:text-2xl [&_input]:font-black [&_input]:tracking-[0.4em] [&_input]:uppercase">{{ form.code }}</div>
+                        {% for error in form.code.errors %}
+                            <p class="mt-2 rounded-lg bg-[#e0345d]/20 px-3 py-2 text-sm font-semibold text-[#ff9db5]">{{ error }}</p>
+                        {% endfor %}
+                        {% if form.non_field_errors %}
+                            <p class="mt-2 rounded-lg bg-[#e0345d]/20 px-3 py-2 text-sm font-semibold text-[#ff9db5]">{{ form.non_field_errors }}</p>
+                        {% endif %}
+                        <button class="mt-6 w-full rounded-2xl bg-sun-500 py-4 text-base font-black text-[#120b2e] shadow-xl shadow-sun-500/30 transition hover:-translate-y-0.5 hover:bg-sun-400" type="submit">
+                            Join
+                        </button>
+                    </div>
+                </form>
+            </div>
+            <p class="mt-6 text-center text-sm text-white/50">Tip: the code is 6 letters/numbers, e.g. <span class="font-black text-sun-400">ABC123</span></p>
+        </div>
+    </main>
+</div>
+{% endblock %}

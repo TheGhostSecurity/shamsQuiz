@@ -1,0 +1,261 @@
+{% extends "base.html" %}
+
+{% block title %}Playing · {{ session.code }} · ShamsQuiz{% endblock %}
+{% block body_class %}bg-[#120b2e] text-white antialiased{% endblock %}
+{% block main_class %}min-h-screen{% endblock %}
+
+{% block content %}
+<div class="flex min-h-screen flex-col">
+    <header class="flex items-center justify-between border-b border-white/10 px-5 py-3">
+        <div class="flex items-center gap-3">
+            <span class="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-sun-400 to-sun-600 text-white">
+                <i data-lucide="sun" class="h-4 w-4"></i>
+            </span>
+            <div>
+                <p class="text-sm font-bold">{{ session.module.title }}</p>
+                <p class="text-[11px] text-white/50">{{ session.code }}</p>
+            </div>
+        </div>
+        <span class="rounded-full bg-white/10 px-3 py-1 text-xs font-bold text-white/80" id="my-score-chip">0 pts</span>
+    </header>
+
+    <main class="flex flex-1 flex-col items-center justify-center px-4 py-6">
+
+        <!-- WAITING -->
+        <div id="phase-waiting" class="hidden w-full max-w-xl text-center">
+            <span class="mx-auto grid h-20 w-20 place-items-center rounded-full bg-[#3b0f7a] text-3xl font-black text-sun-400">{{ participant.name|slice:":1"|upper }}</span>
+            <h1 class="mt-5 text-3xl font-black">You're in, {{ participant.name }}!</h1>
+            <p class="mt-2 text-white/60">Get ready &mdash; the quiz starts when your teacher hits go.</p>
+            <div class="mx-auto mt-8 inline-flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-6 py-4">
+                <span class="relative flex h-3 w-3">
+                    <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-sun-400 opacity-75"></span>
+                    <span class="relative inline-flex h-3 w-3 rounded-full bg-sun-400"></span>
+                </span>
+                <span class="text-sm font-bold text-white/80"><span id="waiting-count">0</span> players waiting</span>
+            </div>
+        </div>
+
+        <!-- QUESTION -->
+        <div id="phase-question" class="hidden w-full max-w-3xl">
+            <div class="flex items-center justify-between">
+                <span id="q-progress" class="rounded-full bg-brand-600/80 px-3.5 py-1 text-xs font-bold"></span>
+                <span id="q-points" class="rounded-full bg-sun-500/15 px-3.5 py-1 text-xs font-bold text-sun-400"></span>
+                <span id="q-timer" class="grid h-16 w-16 place-items-center rounded-full border-2 border-white/20 text-2xl font-black"></span>
+            </div>
+            <h1 id="q-text" class="mt-6 text-center text-2xl font-extrabold leading-snug sm:text-4xl"></h1>
+            <div id="q-choices" class="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-2"></div>
+        </div>
+
+        <!-- ANSWERED (waiting for reveal) -->
+        <div id="phase-answered" class="hidden w-full max-w-xl text-center">
+            <span class="mx-auto grid h-16 w-16 place-items-center rounded-full bg-[#28e38e] text-[#0e4d35]">
+                <i data-lucide="check" class="h-8 w-8"></i>
+            </span>
+            <h1 class="mt-5 text-3xl font-black">Answer locked in!</h1>
+            <p class="mt-2 text-white/60">Waiting for everyone else to answer&hellip;</p>
+            <div class="mx-auto mt-6 h-2 w-48 overflow-hidden rounded-full bg-white/10">
+                <div class="progress-bar h-full rounded-full bg-sun-400" style="width:0%"></div>
+            </div>
+        </div>
+
+        <!-- REVEAL -->
+        <div id="phase-reveal" class="hidden w-full max-w-3xl">
+            <div class="text-center">
+                <p class="text-sm font-bold uppercase tracking-[0.25em] text-sun-400">Time's up!</p>
+                <h1 id="r-question" class="mt-2 text-xl font-extrabold sm:text-2xl"></h1>
+            </div>
+            <div id="r-choices" class="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2"></div>
+            <div class="mt-7 flex items-center justify-center gap-4">
+                <div id="r-result" class="text-center">
+                    <span class="mx-auto grid h-14 w-14 place-items-center rounded-full">
+                        <i class="h-7 w-7" data-lucide=""></i>
+                    </span>
+                    <p class="mt-2 text-lg font-black" id="r-label"></p>
+                </div>
+                <div class="text-center">
+                    <span class="grid h-14 w-14 place-items-center rounded-full bg-white/10 text-lg font-black text-sun-400" id="r-points-badge"></span>
+                    <p class="mt-2 text-sm font-bold text-white/60">Points this round</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ENDED -->
+        <div id="phase-ended" class="hidden w-full max-w-xl text-center">
+            <span class="mx-auto grid h-20 w-20 place-items-center rounded-full bg-sun-500 text-[#120b2e]">
+                <i data-lucide="trophy" class="h-10 w-10"></i>
+            </span>
+            <h1 class="mt-5 text-3xl font-black" id="final-title">{{ participant.name }}</h1>
+            <p class="mt-2 text-white/60">Your final score</p>
+            <p class="mt-3 text-6xl font-black text-sun-400" id="final-score">0</p>
+            <p class="mt-1 text-sm font-bold text-white/60" id="final-rank"></p>
+            <a class="mt-8 inline-flex items-center gap-2 rounded-2xl bg-sun-500 px-8 py-4 text-base font-black text-[#120b2e] hover:bg-sun-400" href="{% url 'join' %}">
+                <i data-lucide="refresh" class="h-4 w-4"></i> Play another quiz
+            </a>
+        </div>
+
+    </main>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+    var code = "{{ session.code }}";
+    var stateUrl = '/api/quiz/' + code + '/state/';
+    var myName = "{{ participant.name|escapejs }}";
+    var COLORS = ['#602bff', '#f05675', '#00b392', '#ffa700'];
+    var POLL = 700;
+    var currentEndsAt = null;
+    var locked = false;
+
+    function $(id) { return document.getElementById(id); }
+    function showPhase(id) {
+        ['phase-waiting', 'phase-question', 'phase-answered', 'phase-reveal', 'phase-ended'].forEach(function (p) {
+            $(p).classList.add('hidden');
+        });
+        $(id).classList.remove('hidden');
+    }
+    function esc(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+    function tick() {
+        if (currentEndsAt) {
+            var left = Math.max(0, Math.ceil((currentEndsAt - Date.now()) / 1000));
+            var t = $('q-timer');
+            if (t) t.textContent = left;
+        }
+    }
+    setInterval(tick, 250);
+
+    function renderQuestion(q) {
+        $('q-progress').textContent = 'Question ' + (q.index + 1) + ' / ' + totalQuestions;
+        $('q-points').textContent = q.points + ' pts';
+        $('q-text').textContent = q.text;
+        var box = $('q-choices');
+        box.innerHTML = '';
+        q.choices.forEach(function (c) {
+            var idx = Math.max(0, c.letter.charCodeAt(0) - 65) % COLORS.length;
+            var btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'group rounded-2xl p-5 text-center text-white shadow-xl transition hover:-translate-y-1 hover:scale-[1.02] sm:p-6';
+            btn.style.backgroundColor = COLORS[idx];
+            btn.innerHTML = '<span class="block text-3xl font-black">' + esc(c.letter) + '</span>' +
+                '<span class="mt-2 block text-lg font-bold sm:text-xl">' + esc(c.text) + '</span>';
+            btn.addEventListener('click', function () { submitAnswer(c.id); });
+            box.appendChild(btn);
+        });
+    }
+
+    function submitAnswer(choiceId) {
+        if (locked) return;
+        locked = true;
+        showPhase('phase-answered');
+        postJSON('/api/quiz/' + code + '/answer/', { choice_id: choiceId })
+            .then(function (r) {
+                if (!r.ok) locked = false;
+            }).catch(function () { locked = false; });
+    }
+
+    function renderReveal(q, myAnswer) {
+        $('r-question').textContent = q.text;
+        var box = $('r-choices');
+        box.innerHTML = '';
+        q.choices.forEach(function (c) {
+            var idx = Math.max(0, c.letter.charCodeAt(0) - 65) % COLORS.length;
+            var isMine = myAnswer && myAnswer.choice_id === c.id;
+            var cls = c.is_correct
+                ? 'rounded-2xl border-2 border-[#28e38e] bg-[#0e4d35] px-5 py-5 text-center'
+                : 'rounded-2xl border border-white/15 bg-white/5 px-5 py-5 text-center opacity-60';
+            var badge = '';
+            if (isMine) {
+                badge = c.is_correct
+                    ? '<span class="mt-2 inline-block rounded-full bg-[#28e38e] px-2 py-0.5 text-[10px] font-black text-[#0e4d35]">YOUR ANSWER</span>'
+                    : '<span class="mt-2 inline-block rounded-full bg-[#e0345d] px-2 py-0.5 text-[10px] font-black text-white">YOUR ANSWER</span>';
+            }
+            var icon = c.is_correct ? '<i data-lucide="check" class="h-6 w-6"></i>' : '';
+            box.innerHTML += '<div class="' + cls + '">' +
+                '<span class="block text-2xl font-black">' + esc(c.letter) + '</span>' +
+                '<span class="mt-1 block font-bold">' + esc(c.text) + '</span>' +
+                (c.is_correct ? '<span class="mt-1 block text-white/70">' + icon + '</span>' : '') +
+                badge + '</div>';
+        });
+
+        var iconEl = $('r-result').querySelector('i');
+        var label = $('r-label');
+        if (myAnswer && myAnswer.correct) {
+            iconEl.setAttribute('data-lucide', 'party-popper');
+            $('r-result').classList.remove('text-white/60');
+            $('r-result').classList.add('text-white');
+            label.textContent = 'Correct!';
+            $('r-points-badge').textContent = '+' + myAnswer.points;
+        } else if (myAnswer) {
+            iconEl.setAttribute('data-lucide', 'frown');
+            $('r-result').classList.remove('text-white/60');
+            $('r-result').classList.add('text-white');
+            label.textContent = 'Wrong!';
+            $('r-points-badge').textContent = '+0';
+        } else {
+            iconEl.setAttribute('data-lucide', 'timer');
+            $('r-result').classList.remove('text-white/60');
+            $('r-result').classList.add('text-white');
+            label.textContent = 'No answer';
+            $('r-points-badge').textContent = '+0';
+        }
+        if (window.lucide) window.lucide.createIcons();
+    }
+
+    var totalQuestions = 1;
+
+    function poll() {
+        fetch(stateUrl).then(function (r) { return r.json(); }).then(function (d) {
+            if (!d.joined) { window.location.href = '/join/'; return; }
+            totalQuestions = d.total_questions || 1;
+            $('my-score-chip').textContent = d.score + ' pts';
+
+            if (d.status === 'ended') {
+                showPhase('phase-ended');
+                $('final-score').textContent = d.score || 0;
+                var lb = d.leaderboard || [];
+                var rank = -1;
+                for (var i = 0; i < lb.length; i++) {
+                    if (lb[i].name === myName) { rank = i; break; }
+                }
+                if (rank >= 0) {
+                    $('final-rank').textContent = '# ' + (rank + 1) + ' of ' + lb.length + ' players';
+                    document.getElementById('phase-ended').querySelector('h1').textContent =
+                        myName + (rank === 0 ? ' — you win!' : '');
+                }
+                return;
+            }
+
+            currentEndsAt = d.question_ends_at ? new Date(d.question_ends_at).getTime() : null;
+            var q = d.question;
+
+            if (d.status === 'waiting' || !q) {
+                showPhase('phase-waiting');
+                $('waiting-count').textContent = d.participants ? d.participants.length : 0;
+                return;
+            }
+
+            if (d.status === 'reveal') {
+                showPhase('phase-reveal');
+                renderReveal(q, d.my_answer);
+                return;
+            }
+
+            // status === 'question'
+            showPhase(d.my_answer ? 'phase-answered' : 'phase-question');
+            if (d.my_answer) {
+                locked = true;
+                var bar = document.querySelector('.progress-bar');
+                if (bar) bar.style.width = '70%';
+            } else {
+                locked = false;
+                renderQuestion(q);
+            }
+        }).catch(function () {});
+    }
+
+    setInterval(poll, POLL);
+    poll();
+})();
+</script>
+{% endblock %}

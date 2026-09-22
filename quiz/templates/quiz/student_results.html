@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}Results · {{ session.code }} · ShamsQuiz{% endblock %}
+{% block body_class %}bg-[#120b2e] text-white antialiased{% endblock %}
+{% block main_class %}min-h-screen{% endblock %}
+
+{% block content %}
+<div class="flex min-h-screen flex-col">
+    <header class="flex items-center justify-between border-b border-white/10 px-5 py-3">
+        <div class="flex items-center gap-3">
+            <span class="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-sun-400 to-sun-600 text-white">
+                <i data-lucide="sun" class="h-4 w-4"></i>
+            </span>
+            <p class="text-sm font-bold">{{ session.module.title }} — results</p>
+        </div>
+    </header>
+
+    <main class="mx-auto flex w-full max-w-xl flex-1 flex-col justify-center px-5 py-10 text-center">
+        <span class="mx-auto grid h-20 w-20 place-items-center rounded-full bg-sun-500 text-[#120b2e]">
+            <i data-lucide="trophy" class="h-10 w-10"></i>
+        </span>
+        <h1 class="mt-5 text-3xl font-black">Quiz complete!</h1>
+        <p class="mt-2 text-white/60">Take a look at the final standings.</p>
+
+        <div class="mt-8 overflow-hidden rounded-2xl border border-white/10 bg-white/5">
+            <ul class="divide-y divide-white/10">
+                {% for player in leaderboard %}
+                    <li class="flex items-center gap-4 px-5 py-3 {% if forloop.first %}bg-sun-500/10{% endif %}">
+                        <span class="w-8 text-center text-lg font-black {% if forloop.first %}text-sun-400{% else %}text-white/50{% endif %}">{{ forloop.counter }}</span>
+                        <span class="grid h-9 w-9 place-items-center rounded-full bg-brand-500 text-xs font-bold">{{ player.name|slice:":2"|upper }}</span>
+                        <span class="min-w-0 flex-1 truncate font-semibold">{{ player.name }}</span>
+                        <span class="font-black text-[#28e38e]">{{ player.score }} pts</span>
+                    </li>
+                {% empty %}
+                    <li class="px-5 py-8 text-white/50">No results.</li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <a class="mt-8 inline-flex items-center justify-center gap-2 rounded-2xl bg-sun-500 px-8 py-4 text-base font-black text-[#120b2e] hover:bg-sun-400" href="{% url 'join' %}">
+            <i data-lucide="refresh" class="h-4 w-4"></i> Play another quiz
+        </a>
+    </main>
+</div>
+{% endblock %}

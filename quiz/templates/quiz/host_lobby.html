@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block title %}Lobby · {{ session.code }} · ShamsQuiz{% endblock %}
+{% block body_class %}bg-[#120b2e] text-white antialiased{% endblock %}
+{% block main_class %}min-h-screen{% endblock %}
+{% block messages_wrap %}mx-auto mt-4 max-w-6xl space-y-2 px-4{% endblock %}
+
+{% block content %}
+<div class="flex min-h-screen flex-col">
+    <header class="flex items-center justify-between border-b border-white/10 px-5 py-4">
+        <div class="flex items-center gap-2.5">
+            <span class="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-sun-400 to-sun-600 text-white">
+                <i data-lucide="sun" class="h-5 w-5"></i>
+            </span>
+            <span class="font-bold">ShamsQuiz</span>
+        </div>
+        <form action="{% url 'host_end_quiz' session.code %}" method="post" onsubmit="return confirm('Cancel this quiz without scoring?')">
+            {% csrf_token %}
+            <button class="rounded-lg border border-white/20 px-3 py-1.5 text-sm font-semibold text-white/70 hover:bg-white/10" type="submit">
+                <i data-lucide="x" class="mr-1 inline h-4 w-4"></i> Cancel
+            </button>
+        </form>
+    </header>
+
+    <main class="flex flex-1 items-center justify-center px-5 py-10">
+        <div class="w-full max-w-3xl text-center">
+            <p class="text-sm font-semibold uppercase tracking-[0.2em] text-sun-400">{{ session.module.title }}</p>
+            <h1 class="mt-3 text-4xl font-black tracking-[0.3em] sm:text-6xl">{{ session.code }}</h1>
+            <p class="mt-4 text-white/70">Share the link below — students enter this code to join.</p>
+
+            <input readonly value="{{ request.scheme }}://{{ request.get_host }}{% url 'join' %}" class="mx-auto mt-4 block w-full max-w-md rounded-xl border border-white/15 bg-white/10 px-4 py-3 text-center text-sm font-semibold text-white outline-none focus:border-sun-400" onclick="this.select()">
+
+            <div class="mx-auto mt-8 flex max-w-md items-center justify-center gap-3">
+                <div id="player-count" class="rounded-2xl border border-white/15 bg-white/10 px-6 py-4 backdrop-blur">
+                    <p class="text-3xl font-black">0</p>
+                    <p class="text-xs font-semibold uppercase tracking-wider text-white/60">Waiting</p>
+                </div>
+                <form action="{% url 'host_start_question' session.code %}" method="post">
+                    {% csrf_token %}
+                    <button id="start-btn" class="inline-flex items-center gap-2 rounded-2xl bg-sun-500 px-8 py-4 text-lg font-black text-[#120b2e] shadow-xl shadow-sun-500/30 transition hover:-translate-y-0.5 hover:bg-sun-400" type="submit">
+                        <i data-lucide="play" class="h-5 w-5"></i> Start
+                    </button>
+                </form>
+            </div>
+
+            <div class="mx-auto mt-8 max-w-lg">
+                <h2 class="text-left text-sm font-semibold uppercase tracking-wider text-white/50">Joined players</h2>
+                <ul id="players" class="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                </ul>
+                <p id="no-players" class="mt-4 text-sm text-white/50">Waiting for players to join&hellip;</p>
+            </div>
+        </div>
+    </main>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+    var code = "{{ session.code }}";
+    var playersEl = document.getElementById('players');
+    var countEl = document.getElementById('player-count').querySelector('p');
+    var noPlayers = document.getElementById('no-players');
+
+    function renderPlayers(list) {
+        playersEl.innerHTML = '';
+        list.forEach(function (p) {
+            var li = document.createElement('li');
+            li.className = 'flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm';
+            li.innerHTML = '<span class="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-brand-500 text-xs font-bold">' +
+                (p.name.slice(0, 2).toUpperCase()) + '</span><span class="truncate font-semibold">' + escapeHtml(p.name) + '</span>';
+            playersEl.appendChild(li);
+        });
+        noPlayers.style.display = list.length ? 'none' : 'block';
+    }
+
+    function escapeHtml(s) {
+        var d = document.createElement('div');
+        d.textContent = s;
+        return d.innerHTML;
+    }
+
+    setInterval(function () {
+        fetch('/api/quiz/' + code + '/state/')
+            .then(function (r) { return r.json(); })
+            .then(function (d) {
+                if (d.participants) {
+                    renderPlayers(d.participants);
+                    countEl.textContent = d.participants.length;
+                }
+                if (d.status !== 'waiting') {
+                    window.location.href = '/host/' + code + '/';
+                }
+            }).catch(function () {});
+    }, 1500);
+})();
+</script>
+{% endblock %}

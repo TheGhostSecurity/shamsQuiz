@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="{% block meta_description %}ShamsQuiz — join live quizzes with a code, or create your own question modules.{% endblock %}">
+    <title>{% block title %}ShamsQuiz{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f3f0ff', 100: '#e9e3ff', 200: '#d5c9ff',
+                            300: '#b7a1ff', 400: '#9470fb', 500: '#7c3aed',
+                            600: '#6d28d9', 700: '#5b21b6', 800: '#4c1d95',
+                            900: '#3b0f7a',
+                        },
+                        sun: {400: '#fbbf24', 500: '#f59e0b', 600: '#d97706'},
+                    },
+                },
+            },
+        };
+    </script>
+    {% block head_extra %}{% endblock %}
+</head>
+<body class="{% block body_class %}bg-[#f7f7f7] text-[#1f1f1f] antialiased{% endblock %}">
+    {% block topbar %}{% endblock %}
+
+    {% if messages %}
+        <div class="{% block messages_wrap %}mx-auto mt-4 max-w-6xl space-y-2 px-4{% endblock %}">
+            {% for message in messages %}
+                <div class="flex items-center justify-between gap-3 rounded-lg border border-[#d5c9ff] bg-[#f3f0ff] px-4 py-3 text-sm text-[#4c1d95]">
+                    <span>{{ message }}</span>
+                    <button class="shrink-0 text-[#6d28d9] hover:text-[#3b0f7a]" onclick="this.parentElement.remove()" type="button">
+                        <i data-lucide="x" class="h-4 w-4"></i>
+                    </button>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <main class="{% block main_class %}mx-auto max-w-6xl px-4 py-8{% endblock %}">
+        {% block content %}{% endblock %}
+    </main>
+
+    <script>
+        function getCookie(name) {
+            var match = document.cookie.match(new RegExp('(^|; )' + name + '=([^;]*)'));
+            return match ? decodeURIComponent(match[2]) : null;
+        }
+        function csrfSafe() { return { 'X-CSRFToken': getCookie('csrftoken') }; }
+        function postJSON(url, data) {
+            return fetch(url, {
+                method: 'POST',
+                headers: Object.assign({ 'Content-Type': 'application/x-www-form-urlencoded' }, csrfSafe()),
+                body: new URLSearchParams(data || {}).toString()
+            }).then(function (r) { return r.json(); });
+        }
+        if (window.lucide) {
+            window.lucide.createIcons();
+        }
+        document.addEventListener('DOMContentLoaded', function () {
+            if (window.lucide) window.lucide.createIcons();
+        });
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
