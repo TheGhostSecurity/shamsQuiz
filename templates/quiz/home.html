@@ -59,7 +59,16 @@
         </div>
 
         <div class="relative flex justify-center">
-            <div class="w-full max-w-md rounded-2xl border border-[#e0e0e0] bg-white p-5 shadow-sm">
+            <div class="absolute -inset-8 -z-0 overflow-hidden rounded-[2rem] bg-[#002b3f] shadow-2xl shadow-[#002b3f]/20">
+                <div class="absolute inset-0 bg-gradient-to-br from-[#034b60] via-[#002b3f] to-[#001723]"></div>
+                <svg class="absolute inset-0 h-full w-full opacity-90" viewBox="0 0 640 480" fill="none" aria-hidden="true" preserveAspectRatio="xMidYMid slice">
+                    <defs><pattern id="heroGeo" width="54" height="54" patternUnits="userSpaceOnUse"><path d="M27 2 52 27 27 52 2 27 27 2Z M27 13 41 27 27 41 13 27 27 13Z" stroke="#d6a844" stroke-opacity=".25"/></pattern><linearGradient id="heroSky" x1="320" y1="0" x2="320" y2="420"><stop stop-color="#f0c66f" stop-opacity=".36"/><stop offset="1" stop-color="#f0c66f" stop-opacity="0"/></linearGradient></defs>
+                    <path fill="url(#heroGeo)" d="M0 0h640v480H0z"/><circle cx="465" cy="111" r="190" fill="url(#heroSky)"/><circle cx="478" cy="112" r="38" fill="#f2ce82"/><circle cx="495" cy="98" r="37" fill="#07384a"/>
+                    <path d="M0 343h640v137H0z" fill="#052735"/><path d="M133 351v-73c0-72 58-130 130-130s130 58 130 130v73H133Z" fill="#0d5260" stroke="#d6a844" stroke-opacity=".6" stroke-width="3"/><path d="M183 351v-53c0-44 36-80 80-80s80 36 80 80v53H183Z" fill="#082f40"/><path d="M263 148c-22-31-12-65 0-81 12 16 22 50 0 81Z" fill="#d9ad59"/><path d="M263 67v91" stroke="#d9ad59" stroke-width="3"/><path d="M92 351v-67c0-23 18-41 41-41s41 18 41 41v67M393 351v-67c0-23 18-41 41-41s41 18 41 41v67" fill="#0a3b4a" stroke="#d6a844" stroke-opacity=".55" stroke-width="3"/><path d="M35 351v-84m0 0-13 21m13-21 13 21m541 63v-84m0 0-13 21m13-21 13 21" stroke="#d6a844" stroke-opacity=".65" stroke-width="3"/>
+                </svg>
+                <div class="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-[#001f2e]/80 to-transparent"></div>
+            </div>
+            <div class="relative z-10 w-full max-w-md rounded-2xl border border-white/30 bg-white/95 p-5 shadow-2xl backdrop-blur-sm">
                 <div class="rounded-lg bg-[#002b3f] p-6 text-white">
                     <div class="flex items-center justify-between">
                         <p class="text-xs font-semibold uppercase tracking-widest text-[#93c5fd]">Live</p>

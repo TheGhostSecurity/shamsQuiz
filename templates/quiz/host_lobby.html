@@ -6,8 +6,19 @@
 {% block messages_wrap %}mx-auto mt-4 max-w-6xl space-y-2 px-4{% endblock %}
 
 {% block content %}
-<div class="flex min-h-screen flex-col">
-    <header class="flex items-center justify-between border-b border-white/10 bg-[#002b3f] px-5 py-4">
+<div class="relative flex min-h-screen flex-col overflow-hidden bg-gradient-to-br from-[#063b4c] via-[#002b3f] to-[#001521]">
+    <div class="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+        <svg class="absolute inset-0 h-full w-full opacity-80" viewBox="0 0 1440 900" fill="none" preserveAspectRatio="xMidYMid slice">
+            <defs><pattern id="lobbyGeo" width="64" height="64" patternUnits="userSpaceOnUse"><path d="M32 2 62 32 32 62 2 32 32 2Zm0 15 15 15-15 15-15-15 15-15Z" stroke="#d9b35d" stroke-opacity=".25"/></pattern><linearGradient id="lobbyGlow" x1="720" y1="120" x2="720" y2="790"><stop stop-color="#d8a842" stop-opacity=".18"/><stop offset="1" stop-color="#d8a842" stop-opacity="0"/></linearGradient></defs>
+            <path fill="url(#lobbyGeo)" d="M0 0h1440v900H0z"/><ellipse cx="720" cy="790" rx="590" ry="440" fill="url(#lobbyGlow)"/>
+            <circle cx="1160" cy="167" r="60" fill="#f1d18b"/><circle cx="1187" cy="145" r="59" fill="#07384a"/>
+            <path d="M420 900V638c0-166 134-300 300-300s300 134 300 300v262H420Z" fill="#0b5362" fill-opacity=".55" stroke="#d9b35d" stroke-opacity=".58" stroke-width="4"/><path d="M525 900V676c0-108 87-195 195-195s195 87 195 195v224H525Z" fill="#032d3c" fill-opacity=".7"/><path d="M720 340c-38-50-21-101 0-126 21 25 38 76 0 126Z" fill="#d9b35d"/><path d="M720 214v125" stroke="#d9b35d" stroke-width="5"/>
+            <path d="M253 900V666c0-65 53-118 118-118s118 53 118 118v234m580 0V666c0-65 53-118 118-118s118 53 118 118v234" fill="#073b4b" fill-opacity=".75" stroke="#d9b35d" stroke-opacity=".45" stroke-width="4"/>
+            <path d="M198 900V603m0 0-30 49m30-49 30 49m1014 298V603m0 0-30 49m30-49 30 49" stroke="#d9b35d" stroke-opacity=".5" stroke-width="5"/>
+        </svg>
+        <div class="absolute inset-0 bg-gradient-to-b from-[#001f2e]/35 via-[#001f2e]/45 to-[#001521]/95"></div>
+    </div>
+    <header class="relative z-10 flex items-center justify-between border-b border-white/10 bg-[#002b3f]/65 px-5 py-4 backdrop-blur-md">
         <div class="flex items-center gap-2.5">
             <span class="grid h-9 w-9 place-items-center rounded-lg bg-gradient-to-br from-[#54b6ff] to-[#0078d4] text-white">
                 <i data-lucide="sun" class="h-4 w-4"></i>
@@ -22,7 +33,7 @@
         </form>
     </header>
 
-    <main class="flex flex-1 items-center justify-center px-5 py-10">
+    <main class="relative z-10 flex flex-1 items-center justify-center px-5 py-10">
         <div class="w-full max-w-3xl text-center">
             <p class="text-sm font-semibold uppercase tracking-[0.2em] text-[#93c5fd]">{{ session.module.title }}</p>
             <h1 class="mt-3 text-4xl font-black tracking-[0.3em] sm:text-6xl">{{ session.code }}</h1>
@@ -43,7 +54,7 @@
                 </form>
             </div>
 
-            <div class="mx-auto mt-8 max-w-lg">
+            <div class="mx-auto mt-8 max-w-lg rounded-2xl border border-white/10 bg-[#001f2e]/45 p-5 text-left shadow-2xl backdrop-blur-md">
                 <h2 class="text-left text-sm font-semibold uppercase tracking-wider text-white/50">Joined players</h2>
                 <ul id="players" class="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
                 </ul>
