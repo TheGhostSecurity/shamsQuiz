@@ -77,17 +77,20 @@
     </div>
     {% if recent_sessions %}
         <ul class="divide-y divide-[#f0f0f0]">
-            {% for s in recent_sessions %}
+            {% for s in recent_page %}
                 <li class="flex flex-wrap items-center gap-x-6 gap-y-2 px-6 py-4 hover:bg-[#fafafa]">
                     <span class="rounded-md bg-[#eaf4ff] px-2.5 py-1 font-mono text-sm font-bold text-[#0067c0]">{{ s.code }}</span>
                     <a class="admin-link" href="{% url 'admin:session_detail' s.id %}">{{ s.module.title }}</a>
-                    <span class="text-sm text-[#5c5c5c]">by {{ s.host.username }}</span>
+                    <a class="text-sm text-[#5c5c5c] hover:text-[#0067c0]" href="{% url 'admin:sessions' %}?q={{ s.host.username }}">{{ s.host.username }}</a>
                     <span class="text-sm text-[#5c5c5c]">{{ s.num_players }} players</span>
                     {% include "admin/_status.html" with s=s.status %}
                     <span class="ml-auto text-xs text-[#8c8c8c]">{{ s.created_at|date:"M j, Y H:i" }}</span>
                 </li>
             {% endfor %}
         </ul>
+        {% if recent_page.paginator.count %}
+            {% include "admin/_pagination.html" with page=recent_page %}
+        {% endif %}
     {% else %}
         <p class="px-6 py-10 text-center text-sm text-[#5c5c5c]">No quiz sessions yet. Host a quiz from the teacher area to see it here.</p>
     {% endif %}

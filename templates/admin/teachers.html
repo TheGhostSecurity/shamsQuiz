@@ -45,9 +45,12 @@
                         <td class="admin-td text-center text-[#424242]">{{ t.answer_count }}</td>
                         <td class="admin-td text-center text-[#424242]">{{ t.activity_count }}</td>
                         <td class="admin-td">
-                            <div class="flex justify-end">
+                            <div class="flex items-center justify-end gap-2">
+                                <a class="admin-btn admin-btn-outline admin-btn-sm" href="{% url 'admin:modules' %}?teacher={{ t.id }}">
+                                    <i data-lucide="folder-open" class="h-3.5 w-3.5"></i> View modules
+                                </a>
                                 <a class="admin-btn admin-btn-outline admin-btn-sm" href="{% url 'admin:logs' %}?actor={{ t.id }}">
-                                    <i data-lucide="scroll-text" class="h-3.5 w-3.5"></i> View activity
+                                    <i data-lucide="scroll-text" class="h-3.5 w-3.5"></i> Activity
                                 </a>
                             </div>
                         </td>
@@ -60,6 +63,6 @@
             </tbody>
         </table>
     </div>
-    {% include "admin/_pagination.html" %}
+    {% include "admin/_pagination.html" with page=teachers %}
 </div>
 {% endblock %}

@@ -1,12 +1,23 @@
-{% if page.paginator.num_pages > 1 %}
-<div class="flex flex-wrap items-center justify-between gap-3 border-t border-[#ededed] px-6 py-4">
-    <p class="text-sm text-[#5c5c5c]">{{ page.paginator.count }} total · page {{ page.number }} of {{ page.paginator.num_pages }}</p>
-    <div class="flex items-center gap-2">
+{% if page.paginator.count %}
+<div class="flex flex-wrap items-center justify-between gap-3 border-t border-[#ededed] px-5 py-3">
+    <p class="text-xs text-[#5c5c5c]">{{ page.paginator.count }} total · page {{ page.number }} of {{ page.paginator.num_pages }}</p>
+    <div class="flex items-center gap-1">
         {% if page.has_previous %}
-            <a class="rounded-md border border-[#d6d6d6] bg-white px-3 py-1.5 text-xs font-semibold text-[#424242] hover:bg-[#f3f3f3]" href="?{% if base_query %}{{ base_query }}&{% endif %}page={{ page.previous_page_number }}">Prev</a>
+            <a class="grid h-8 w-8 place-items-center rounded-md border border-[#d6d6d6] bg-white text-sm font-semibold text-[#424242] hover:bg-[#eaf4ff] hover:text-[#0067c0]" href="?{% if base_query %}{{ base_query }}&{% endif %}page={{ page.previous_page_number }}" aria-label="Previous page">&larr;</a>
+        {% else %}
+            <span class="grid h-8 w-8 place-items-center rounded-md border border-[#f0f0f0] bg-white text-sm font-semibold text-[#c8c8c8]">&larr;</span>
         {% endif %}
+        {% for n in page.paginator.page_range %}
+            {% if n == page.number %}
+                <span class="grid h-8 w-8 place-items-center rounded-md bg-[#0067c0] text-xs font-semibold text-white">{{ n }}</span>
+            {% elif n >= page.number|add:"-2" and n <= page.number|add:"2" %}
+                <a class="grid h-8 w-8 place-items-center rounded-md text-xs font-semibold text-[#424242] hover:bg-[#eaf4ff] hover:text-[#0067c0]" href="?{% if base_query %}{{ base_query }}&{% endif %}page={{ n }}">{{ n }}</a>
+            {% endif %}
+        {% endfor %}
         {% if page.has_next %}
-            <a class="rounded-md border border-[#d6d6d6] bg-white px-3 py-1.5 text-xs font-semibold text-[#424242] hover:bg-[#f3f3f3]" href="?{% if base_query %}{{ base_query }}&{% endif %}page={{ page.next_page_number }}">Next</a>
+            <a class="grid h-8 w-8 place-items-center rounded-md border border-[#d6d6d6] bg-white text-sm font-semibold text-[#424242] hover:bg-[#eaf4ff] hover:text-[#0067c0]" href="?{% if base_query %}{{ base_query }}&{% endif %}page={{ page.next_page_number }}" aria-label="Next page">&rarr;</a>
+        {% else %}
+            <span class="grid h-8 w-8 place-items-center rounded-md border border-[#f0f0f0] bg-white text-sm font-semibold text-[#c8c8c8]">&rarr;</span>
         {% endif %}
     </div>
 </div>

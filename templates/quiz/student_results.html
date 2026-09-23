@@ -28,8 +28,12 @@
         </ul>
     </div>
 
-    <a class="mt-8 inline-flex items-center gap-2 rounded-lg bg-[#0067c0] px-8 py-3.5 text-base font-semibold text-white shadow-sm hover:bg-[#005a9e]" href="{% url 'join' %}">
-        <i data-lucide="refresh" class="h-4 w-4"></i> Play another quiz
+    <div class="mt-8 flex w-full flex-col gap-2 sm:flex-row">
+    <a class="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[#002b3f] px-8 py-3.5 text-base font-semibold text-white shadow-sm hover:bg-[#001f2e]" href="{% url 'scoreboard' session.code %}">
+        <i data-lucide="presentation" class="h-5 w-5"></i> Full-screen scoreboard
+    </a>
+    <a class="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[#0067c0] px-8 py-3.5 text-base font-semibold text-white shadow-sm hover:bg-[#005a9e]" href="{% url 'join' %}">
+        <i data-lucide="refresh" class="h-5 w-5"></i> Play another quiz
     </a>
 </div>
 {% endblock %}

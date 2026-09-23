@@ -1,3 +1,4 @@
+{% load static %}
 <aside class="fixed inset-y-0 left-0 z-40 flex w-60 flex-col border-r border-[#e7e7e7] bg-white">
     <div class="flex items-center gap-2.5 px-5 py-5">
         <a href="{% url 'home' %}" class="flex items-center gap-2.5">
@@ -8,6 +9,16 @@
             </span>
             <span class="text-lg font-bold tracking-tight text-black">ShamsQuiz</span>
         </a>
+    </div>
+
+    <!-- Photo: Alim, Unsplash mosque calligraphy photo, free under the Unsplash License. Source: https://unsplash.com/photos/a-man-standing-in-front-of-a-white-building-Bu61vhoOenY -->
+    <div class="group relative mx-3 mb-3 h-28 shrink-0 overflow-hidden rounded-xl shadow-sm">
+        <img src="{% static 'quiz/images/mosque-calligraphy.jpg' %}" alt="Arabic calligraphy and geometric ornament on a mosque facade" class="absolute inset-0 h-full w-full object-cover object-center transition duration-500 group-hover:scale-105">
+        <div class="absolute inset-0 bg-gradient-to-t from-[#001f2e]/90 via-[#001f2e]/20 to-transparent"></div>
+        <div class="absolute inset-x-3 bottom-2.5">
+            <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-[#f2ce83]">Faith &amp; learning</p>
+            <p class="mt-0.5 text-sm font-semibold text-white">A place to grow</p>
+        </div>
     </div>
 
     <nav class="flex-1 space-y-1 overflow-y-auto px-3 py-2">

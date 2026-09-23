@@ -26,7 +26,7 @@ def admin_required(view_func):
     return wrapped
 
 
-def _paginate(request, queryset, per=25):
+def _paginate(request, queryset, per=10):
     page = request.GET.get("page")
     return Paginator(queryset, per).get_page(page)
 
@@ -81,6 +81,11 @@ class AdminUserForm(forms.Form):
 @admin_required
 def index(request):
     sessions = QuizSession.objects
+    recent = (
+        sessions.select_related("module", "host")
+        .annotate(num_players=Count("participants"))
+        .order_by("-created_at")
+    )
     context = {
         "stats": {
             "users": User.objects.count(),
@@ -95,8 +100,8 @@ def index(request):
             "participants": Participant.objects.count(),
             "answers": Answer.objects.count(),
         },
-        "recent_sessions": sessions.select_related("module", "host")
-        .annotate(num_players=Count("participants"))[:6],
+        "recent_sessions": recent,
+        "recent_page": _paginate(request, recent, per=8),
     }
     return render(request, "admin/index.html", context)
 
@@ -204,17 +209,33 @@ def user_delete(request, user_id):
 @admin_required
 def modules(request):
     q = request.GET.get("q", "").strip()
+    teacher_id = request.GET.get("teacher", "").strip()
     queryset = (
         Module.objects.select_related("teacher")
         .annotate(num_questions=Count("questions"))
-        .order_by("-created_at")
     )
+    if teacher_id.isdigit():
+        queryset = queryset.filter(teacher_id=int(teacher_id))
     if q:
-        queryset = queryset.filter(Q(title__icontains=q) | Q(teacher__username__icontains=q))
+        queryset = queryset.filter(
+            Q(title__icontains=q) | Q(teacher__username__icontains=q)
+        )
+    queryset = queryset.order_by("teacher__username", "-created_at")
+    teacher_user = None
+    if teacher_id.isdigit():
+        teacher_user = User.objects.filter(pk=int(teacher_id)).first()
     return render(
         request,
         "admin/modules.html",
-        {"modules": _paginate(request, queryset), "q": q, "base_query": _base_query(request)},
+        {
+            "modules": _paginate(request, queryset),
+            "q": q,
+            "teacher": teacher_id,
+            "teacher_user": teacher_user,
+            "teacher_options": User.objects.filter(role=User.Role.TEACHER)
+            .order_by("username"),
+            "base_query": _base_query(request),
+        },
     )
 
 

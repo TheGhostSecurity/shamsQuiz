@@ -113,6 +113,7 @@ urlpatterns = [
     ),
     path("host/<str:code>/end/", views.host_end_quiz, name="host_end_quiz"),
     path("host/<str:code>/results/", views.host_results, name="host_results"),
+    path("scoreboard/<str:code>/", views.scoreboard, name="scoreboard"),
 
     # Student
     path("join/", views.join, name="join"),

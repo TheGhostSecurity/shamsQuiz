@@ -574,6 +574,42 @@ def host_results(request, code):
     )
 
 
+def scoreboard(request, code):
+    session = get_object_or_404(QuizSession, code=code)
+    leaderboard = sorted(
+        session.participants.all(), key=lambda p: p.score, reverse=True
+    )
+    top = leaderboard[0].score if leaderboard else 0
+    rows = []
+    for p in leaderboard:
+        correct = p.answers.filter(choice__is_correct=True).count()
+        attempted = p.answers.count()
+        rows.append(
+            {
+                "participant": p,
+                "score": p.score,
+                "correct": correct,
+                "attempted": attempted,
+                "accuracy": round(correct / attempted * 100) if attempted else 0,
+                "pct": round(p.score / top * 100) if top else 0,
+            }
+        )
+    return render(
+        request,
+        "quiz/scoreboard.html",
+        {
+            "session": session,
+            "rows": rows,
+            "top": top,
+            "avg_score": round(sum(r["score"] for r in rows) / len(rows))
+            if rows
+            else 0,
+            "best_accuracy": max((r["accuracy"] for r in rows), default=0),
+            "my_id": request.session.get("participant_id"),
+        },
+    )
+
+
 # ---------------- Live quiz: student ----------------
 
 

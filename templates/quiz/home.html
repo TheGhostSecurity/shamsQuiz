@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}ShamsQuiz — Live classroom quizzes{% endblock %}
 {% block body_class %}bg-white text-[#1f1f1f] antialiased{% endblock %}
@@ -58,41 +59,17 @@
             </div>
         </div>
 
-        <div class="relative flex justify-center">
+        <div class="relative flex h-72 justify-center sm:h-96 lg:h-[32rem]">
             <div class="absolute -inset-8 -z-0 overflow-hidden rounded-[2rem] bg-[#002b3f] shadow-2xl shadow-[#002b3f]/20">
-                <div class="absolute inset-0 bg-gradient-to-br from-[#034b60] via-[#002b3f] to-[#001723]"></div>
-                <svg class="absolute inset-0 h-full w-full opacity-90" viewBox="0 0 640 480" fill="none" aria-hidden="true" preserveAspectRatio="xMidYMid slice">
+                <!-- Photo: Unsplash student-class collection, free under the Unsplash License. Source: https://unsplash.com/s/photos/student-class -->
+                <img src="{% static 'quiz/images/students-class.jpg' %}" alt="Students learning together in a classroom" class="absolute inset-0 h-full w-full object-cover object-center opacity-95">
+                <div class="absolute inset-0 bg-gradient-to-br from-[#034b60]/25 via-[#002b3f]/20 to-[#001723]/40"></div>
+                <svg class="absolute inset-0 h-full w-full opacity-35" viewBox="0 0 640 480" fill="none" aria-hidden="true" preserveAspectRatio="xMidYMid slice">
                     <defs><pattern id="heroGeo" width="54" height="54" patternUnits="userSpaceOnUse"><path d="M27 2 52 27 27 52 2 27 27 2Z M27 13 41 27 27 41 13 27 27 13Z" stroke="#d6a844" stroke-opacity=".25"/></pattern><linearGradient id="heroSky" x1="320" y1="0" x2="320" y2="420"><stop stop-color="#f0c66f" stop-opacity=".36"/><stop offset="1" stop-color="#f0c66f" stop-opacity="0"/></linearGradient></defs>
                     <path fill="url(#heroGeo)" d="M0 0h640v480H0z"/><circle cx="465" cy="111" r="190" fill="url(#heroSky)"/><circle cx="478" cy="112" r="38" fill="#f2ce82"/><circle cx="495" cy="98" r="37" fill="#07384a"/>
                     <path d="M0 343h640v137H0z" fill="#052735"/><path d="M133 351v-73c0-72 58-130 130-130s130 58 130 130v73H133Z" fill="#0d5260" stroke="#d6a844" stroke-opacity=".6" stroke-width="3"/><path d="M183 351v-53c0-44 36-80 80-80s80 36 80 80v53H183Z" fill="#082f40"/><path d="M263 148c-22-31-12-65 0-81 12 16 22 50 0 81Z" fill="#d9ad59"/><path d="M263 67v91" stroke="#d9ad59" stroke-width="3"/><path d="M92 351v-67c0-23 18-41 41-41s41 18 41 41v67M393 351v-67c0-23 18-41 41-41s41 18 41 41v67" fill="#0a3b4a" stroke="#d6a844" stroke-opacity=".55" stroke-width="3"/><path d="M35 351v-84m0 0-13 21m13-21 13 21m541 63v-84m0 0-13 21m13-21 13 21" stroke="#d6a844" stroke-opacity=".65" stroke-width="3"/>
                 </svg>
                 <div class="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-[#001f2e]/80 to-transparent"></div>
-            </div>
-            <div class="relative z-10 w-full max-w-md rounded-2xl border border-white/30 bg-white/95 p-5 shadow-2xl backdrop-blur-sm">
-                <div class="rounded-lg bg-[#002b3f] p-6 text-white">
-                    <div class="flex items-center justify-between">
-                        <p class="text-xs font-semibold uppercase tracking-widest text-[#93c5fd]">Live</p>
-                        <span class="relative flex h-2.5 w-2.5">
-                            <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#37a5ff] opacity-75"></span>
-                            <span class="relative inline-flex h-2.5 w-2.5 rounded-full bg-[#54b6ff]"></span>
-                        </span>
-                    </div>
-                    <p class="mt-4 text-3xl font-black tracking-[0.35em]">swali namba 1</p>
-                    <p class="mt-1 text-sm font-medium text-[#93c5fd]">QURAN</p>
-                    <div class="mt-6 flex items-center justify-between rounded-lg bg-white/10 px-4 py-3 backdrop-blur">
-                        <div>
-                            <p class="text-[11px] uppercase tracking-wider text-[#93c5fd]">Question</p>
-                            <p class="text-sm font-bold">3 / 10</p>
-                        </div>
-                        <div class="h-10 w-10 rounded-full border-2 border-white/40 text-center text-lg font-black leading-9">7</div>
-                    </div>
-                </div>
-                <div class="mt-4 grid grid-cols-2 gap-3">
-                    <div class="rounded-lg bg-[#0067c0] p-3 text-center text-white"><span class="text-2xl font-black">A</span><p class="mt-1 text-xs font-semibold">quran</p></div>
-                    <div class="rounded-lg bg-[#7c3aed] p-3 text-center text-white"><span class="text-2xl font-black">B</span><p class="mt-1 text-xs font-semibold">tajwed</p></div>
-                    <div class="rounded-lg bg-[#d99322] p-3 text-center text-white"><span class="text-2xl font-black">C</span><p class="mt-1 text-xs font-semibold">yote sahihi</p></div>
-                    <div class="rounded-lg bg-[#dc2626] p-3 text-center text-white"><span class="text-2xl font-black">D</span><p class="mt-1 text-xs font-semibold">hakuna</p></div>
-                </div>
             </div>
         </div>
     </div>
@@ -122,14 +99,20 @@
 </section>
 
 <footer class="border-t border-[#e8e8e8] bg-[#f7f7f7]">
-    <div class="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-5 py-6 text-sm text-[#8c8c8c]">
-        <span>ShamsQuiz — built for the classroom</span>
-        <div class="flex items-center gap-4">
+    <div class="mx-auto flex max-w-6xl flex-col gap-5 px-5 py-8 text-sm text-[#8c8c8c] sm:flex-row sm:items-center sm:justify-between">
+        <span>ShamsQuiz — developed by TheghostSecurity Team</span>
+        <div class="flex flex-wrap items-center gap-x-5 gap-y-2">
             {% if user.is_authenticated %}
                 <a class="font-semibold text-[#0067c0] hover:underline" href="{% url 'dashboard' %}">Dashboard</a>
             {% else %}
                 <a class="font-semibold text-[#0067c0] hover:underline" href="{% url 'join' %}">Join a quiz</a>
             {% endif %}
+            <span class="hidden h-4 border-l border-[#d6d6d6] sm:inline-block"></span>
+            <span class="text-xs font-bold uppercase tracking-wider text-[#8c8c8c]">Support</span>
+            <a class="inline-flex items-center gap-1.5 font-semibold text-[#424242] transition hover:text-[#0067c0]" href="https://www.instagram.com/theghostsecurity/" target="_blank" rel="noopener noreferrer"><i data-lucide="instagram" class="h-4 w-4"></i>Instagram</a>
+            <a class="inline-flex items-center gap-1.5 font-semibold text-[#424242] transition hover:text-[#107c41]" href="https://wa.me/25574500110" target="_blank" rel="noopener noreferrer"><i data-lucide="message-circle" class="h-4 w-4"></i>WhatsApp</a>
+            <a class="inline-flex items-center gap-1.5 font-semibold text-[#424242] transition hover:text-[#0067c0]" href="https://tz.linkedin.com/in/burhani-katimba-29963930b" target="_blank" rel="noopener noreferrer"><i data-lucide="linkedin" class="h-4 w-4"></i>LinkedIn</a>
+            <a class="inline-flex items-center gap-1.5 font-semibold text-[#424242] transition hover:text-[#0067c0]" href="mailto:burhanikatimba@gmail.com"><i data-lucide="mail" class="h-4 w-4"></i>burhanikatimba@gmail.com</a>
         </div>
     </div>
 </footer>

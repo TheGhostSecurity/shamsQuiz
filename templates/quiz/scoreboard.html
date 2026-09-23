@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+
+{% block title %}Scoreboard · {{ session.code }} · ShamsQuiz{% endblock %}
+{% block body_class %}bg-[#001f2e] text-white antialiased{% endblock %}
+{% block main_class %}min-h-screen{% endblock %}
+{% block messages_wrap %}sr-only{% endblock %}
+
+{% block content %}
+<div class="relative flex min-h-screen flex-col overflow-hidden bg-gradient-to-br from-[#063b4c] via-[#002b3f] to-[#001521]">
+    <div class="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+        <svg class="absolute inset-0 h-full w-full opacity-80" viewBox="0 0 1440 900" fill="none" preserveAspectRatio="xMidYMid slice">
+            <defs><pattern id="sbGeo" width="64" height="64" patternUnits="userSpaceOnUse"><path d="M32 2 62 32 32 62 2 32 32 2Zm0 15 15 15-15 15-15-15 15-15Z" stroke="#d9b35d" stroke-opacity=".25"/></pattern><linearGradient id="sbGlow" x1="720" y1="120" x2="720" y2="790"><stop stop-color="#d8a842" stop-opacity=".15"/><stop offset="1" stop-color="#d8a842" stop-opacity="0"/></linearGradient></defs>
+            <path fill="url(#sbGeo)" d="M0 0h1440v900H0z"/><ellipse cx="720" cy="790" rx="590" ry="440" fill="url(#sbGlow)"/>
+            <path d="M420 900V638c0-166 134-300 300-300s300 134 300 300v262H420Z" fill="#0b5362" fill-opacity=".55" stroke="#d9b35d" stroke-opacity=".4" stroke-width="4"/><path d="M525 900V676c0-108 87-195 195-195s195 87 195 195v224H525Z" fill="#032d3c" fill-opacity=".7"/><path d="M720 340c-38-50-21-101 0-126 21 25 38 76 0 126Z" fill="#d9b35d"/><path d="M720 214v125" stroke="#d9b35d" stroke-width="5"/>
+        </svg>
+        <div class="absolute inset-0 bg-gradient-to-b from-[#001f2e]/35 via-[#001f2e]/45 to-[#001521]/95"></div>
+    </div>
+
+    <header class="relative z-10 flex items-center justify-between border-b border-white/10 bg-[#002b3f]/65 px-4 py-3 backdrop-blur-md sm:px-6">
+        <div class="flex min-w-0 items-center gap-2.5">
+            <span class="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-[#54b6ff] to-[#0078d4]">
+                <i data-lucide="sun" class="h-4 w-4"></i>
+            </span>
+            <div class="min-w-0">
+                <p class="truncate text-sm font-bold">{{ session.module.title }}</p>
+                <p class="text-[11px] text-white/50">Scoreboard · {{ session.code }}</p>
+            </div>
+        </div>
+        <div class="flex shrink-0 items-center gap-2">
+            <span class="rounded-full bg-[#d99322]/15 px-3 py-1 text-xs font-bold text-[#f2ce83]">{{ rows|length }} players</span>
+        </div>
+    </header>
+
+    {% if rows %}
+        <main class="relative z-10 mx-auto flex w-full max-w-3xl flex-1 flex-col overflow-y-auto px-4 py-6 pb-[calc(env(safe-area-inset-bottom)+1.5rem)] sm:px-6">
+            <div class="text-center">
+                <p class="text-xs font-bold uppercase tracking-[0.3em] text-[#93c5fd]">Final standings</p>
+                <h1 class="mt-1 text-2xl font-black sm:text-3xl">Scoreboard</h1>
+            </div>
+
+            <div class="mt-6 flex items-end justify-center gap-3 sm:gap-5">
+                {% for row in rows %}
+                    {% if forloop.counter == 2 %}
+                        <div class="flex w-24 flex-col items-center sm:w-28">
+                            <span class="grid h-14 w-14 place-items-center rounded-full bg-[#9aa4b0] text-xl font-black text-white shadow-lg sm:h-16 sm:w-16">{{ row.participant.name|slice:":1"|upper }}</span>
+                            <p class="mt-1.5 max-w-full truncate text-center text-xs font-bold sm:text-sm">{{ row.participant.name }}</p>
+                            <p class="text-lg font-black text-[#dce2e8]">{{ row.score }}</p>
+                            <span class="mt-1 inline-flex items-center gap-1 rounded-full bg-[#9aa4b0] px-2 py-0.5 text-[10px] font-black text-white">2</span>
+                        </div>
+                    {% endif %}
+                    {% if forloop.first %}
+                        <div class="flex w-28 flex-col items-center sm:w-36">
+                            <span class="text-shadow mb-1 inline-flex items-center gap-1 rounded-full bg-[#d99322] px-3 py-1 text-[10px] font-black uppercase tracking-widest text-white shadow-lg">Champion</span>
+                            <span class="grid h-20 w-20 place-items-center rounded-full bg-gradient-to-br from-[#f2ce83] to-[#d99322] text-3xl font-black text-white shadow-xl sm:h-24 sm:w-24">{{ row.participant.name|slice:":1"|upper }}</span>
+                            <p class="mt-2 max-w-full truncate text-center text-sm font-bold sm:text-base">{{ row.participant.name }}</p>
+                            <p class="text-2xl font-black text-[#f2ce83]">{{ row.score }}</p>
+                            <span class="mt-1 inline-flex items-center gap-1 rounded-full bg-[#d99322] px-2 py-0.5 text-[10px] font-black text-white"><i data-lucide="crown" class="h-3 w-3"></i> 1</span>
+                        </div>
+                    {% endif %}
+                    {% if forloop.counter == 3 %}
+                        <div class="flex w-24 flex-col items-center sm:w-28">
+                            <span class="grid h-12 w-12 place-items-center rounded-full bg-[#c47019] text-xl font-black text-white shadow-lg sm:h-14 sm:w-14">{{ row.participant.name|slice:":1"|upper }}</span>
+                            <p class="mt-1.5 max-w-full truncate text-center text-xs font-bold sm:text-sm">{{ row.participant.name }}</p>
+                            <p class="text-lg font-black text-[#e8a63d]">{{ row.score }}</p>
+                            <span class="mt-1 inline-flex items-center gap-1 rounded-full bg-[#c47019] px-2 py-0.5 text-[10px] font-black text-white">3</span>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+
+            <ul class="mt-8 space-y-2">
+                {% for row in rows %}
+                    <li class="overflow-hidden rounded-xl border border-white/10 bg-[#001f2e]/60 px-3 py-2.5 backdrop-blur sm:px-4 {% if row.participant.id == my_id %}border-[#37a5ff]/60 bg-[#0078d4]/25{% endif %}">
+                        <div class="flex items-center gap-3">
+                            <span class="grid h-8 w-8 shrink-0 place-items-center rounded-full text-sm font-black {% if forloop.counter <= 3 %}bg-white/15{% else %}bg-white/10{% endif %}">{{ forloop.counter }}</span>
+                            <div class="min-w-0 flex-1">
+                                <p class="truncate text-sm font-bold">
+                                    {{ row.participant.name }}
+                                    {% if row.participant.id == my_id %}<span class="ml-1 rounded-full bg-[#37a5ff] px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-white">You</span>{% endif %}
+                                </p>
+                                <div class="mt-1 flex items-center gap-1.5">
+                                    <span class="h-1.5 w-full overflow-hidden rounded-full bg-white/10">
+                                        <span class="sb-bar block h-full rounded-full" data-pct="{{ row.pct }}" style="width:0%"></span>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="shrink-0 text-right">
+                                <p class="text-sm font-black text-[#f2ce83]">{{ row.score }}</p>
+                                <p class="text-[10px] text-white/50">{{ row.accuracy }}% acc</p>
+                            </div>
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+
+            <div class="mt-6 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                <div class="rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-center">
+                    <p class="text-lg font-black text-[#f2ce83]">{{ avg_score }}</p>
+                    <p class="text-[10px] font-semibold uppercase tracking-wider text-white/50">Avg score</p>
+                </div>
+                <div class="rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-center">
+                    <p class="text-lg font-black text-[#9be8c0]">{{ best_accuracy }}%</p>
+                    <p class="text-[10px] font-semibold uppercase tracking-wider text-white/50">Best accuracy</p>
+                </div>
+                <div class="col-span-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-center sm:col-span-1">
+                    <p class="text-lg font-black text-[#93c5fd]">{{ session.question_count }}</p>
+                    <p class="text-[10px] font-semibold uppercase tracking-wider text-white/50">Questions</p>
+                </div>
+            </div>
+
+            <div class="mt-8 flex flex-col items-center justify-center gap-2 sm:flex-row">
+                <a class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#0078d4] px-6 py-3 text-sm font-black text-white shadow-xl shadow-[#0078d4]/40 hover:bg-[#37a5ff] sm:w-auto" href="{% url 'join' %}">
+                    <i data-lucide="refresh" class="h-4 w-4"></i> Play another quiz
+                </a>
+                {% if request.user.is_authenticated and session.host_id == request.user.id %}
+                    <a class="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-white/20 px-6 py-3 text-sm font-bold text-white/80 hover:bg-white/10 sm:w-auto" href="{% url 'host_results' session.code %}">
+                        <i data-lucide="chart-column-big" class="h-4 w-4"></i> Back to results
+                    </a>
+                {% else %}
+                    <a class="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-white/20 px-6 py-3 text-sm font-bold text-white/80 hover:bg-white/10 sm:w-auto" href="{% url 'join' %}">
+                        <i data-lucide="log-in" class="h-4 w-4"></i> Back to home
+                    </a>
+                {% endif %}
+            </div>
+        </main>
+    {% else %}
+        <main class="relative z-10 flex flex-1 items-center justify-center px-6">
+            <div class="text-center">
+                <i data-lucide="trophy" class="mx-auto h-12 w-12 text-[#93c5fd]"></i>
+                <p class="mt-4 font-bold text-white/70">No players joined this quiz.</p>
+            </div>
+        </main>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+    var bars = document.querySelectorAll('.sb-bar');
+    bars.forEach(function (bar, i) {
+        setTimeout(function () {
+            bar.style.transition = 'width .9s cubic-bezier(.22,1,.36,1)';
+            bar.style.width = bar.getAttribute('data-pct') + '%';
+            bar.style.background = 'linear-gradient(90deg, #37a5ff, #9be8c0)';
+        }, 200 + i * 90);
+    });
+})();
+</script>
+{% endblock %}
