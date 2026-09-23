@@ -18,4 +18,6 @@ urlpatterns = [
     path("sessions/<int:session_id>/end/", views_admin.session_end, name="session_end"),
     path("participants/", views_admin.participants, name="participants"),
     path("answers/", views_admin.answers, name="answers"),
+    path("teachers/", views_admin.teachers, name="teachers"),
+    path("logs/", views_admin.logs, name="logs"),
 ]

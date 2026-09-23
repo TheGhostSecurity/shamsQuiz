@@ -19,8 +19,7 @@
                 <a class="rounded-lg bg-[#0067c0] px-4 py-2 text-sm font-semibold text-white hover:bg-[#005a9e]" href="{% url 'dashboard' %}">Dashboard</a>
             {% else %}
                 <a class="rounded-lg px-4 py-2 text-sm font-semibold text-[#0067c0] hover:bg-[#eaf4ff]" href="{% url 'join' %}">Join a quiz</a>
-                <a class="rounded-lg px-4 py-2 text-sm font-semibold text-[#5c5c5c] hover:bg-[#f3f3f3]" href="{% url 'login' %}">Log in</a>
-                <a class="rounded-lg bg-[#002b3f] px-4 py-2 text-sm font-semibold text-white hover:bg-[#001f2e]" href="{% url 'signup' %}">Sign up</a>
+                <a class="rounded-lg bg-[#002b3f] px-4 py-2 text-sm font-semibold text-white hover:bg-[#001f2e]" href="{% url 'login' %}">Log in</a>
             {% endif %}
         </div>
     </div>
@@ -47,12 +46,12 @@
                         Open dashboard
                     </a>
                 {% else %}
-                    <a class="inline-flex items-center gap-2 rounded-md bg-[#002b3f] px-6 py-3.5 text-sm font-semibold text-white hover:bg-[#001f2e]" href="{% url 'signup' %}">
-                        <i data-lucide="graduation-cap" class="h-4 w-4"></i>
-                        Create free account
+                    <a class="inline-flex items-center gap-2 rounded-md bg-[#002b3f] px-6 py-3.5 text-sm font-semibold text-white hover:bg-[#001f2e]" href="{% url 'login' %}">
+                        <i data-lucide="log-in" class="h-4 w-4"></i>
+                        Log in
                     </a>
                     <a class="inline-flex items-center gap-2 rounded-md border border-[#c8c8c8] bg-white px-6 py-3.5 text-sm font-semibold text-[#0067c0] hover:bg-[#eaf4ff]" href="{% url 'join' %}">
-                        <i data-lucide="log-in" class="h-4 w-4"></i>
+                        <i data-lucide="gamepad-2" class="h-4 w-4"></i>
                         Join a quiz
                     </a>
                 {% endif %}

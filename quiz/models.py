@@ -73,6 +73,43 @@ class Question(models.Model):
         super().save(*args, **kwargs)
 
 
+class BankQuestion(models.Model):
+    text = models.TextField()
+    subject = models.CharField(max_length=100, blank=True)
+    time_limit = models.PositiveIntegerField(default=30, help_text="Seconds")
+    points = models.PositiveIntegerField(default=1000)
+    added_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="bank_questions",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name_plural = "Bank questions"
+
+    def __str__(self):
+        return self.text[:60]
+
+
+class BankChoice(models.Model):
+    question = models.ForeignKey(
+        BankQuestion, on_delete=models.CASCADE, related_name="choices"
+    )
+    text = models.CharField(max_length=500)
+    is_correct = models.BooleanField(default=False)
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ["order", "id"]
+
+    def __str__(self):
+        return self.text
+
+
 class Choice(models.Model):
     question = models.ForeignKey(
         Question, on_delete=models.CASCADE, related_name="choices"
@@ -205,3 +242,49 @@ class Answer(models.Model):
                 name="uniq_participant_question",
             )
         ]
+
+    def __str__(self):
+        return f"{self.participant.name} → {self.question}"
+
+
+class ActivityLog(models.Model):
+    class Action(models.TextChoices):
+        LOGIN = "login", "Login"
+        LOGOUT = "logout", "Logout"
+        SIGNUP = "signup", "Signup"
+        MODULE_CREATED = "module_created", "Module created"
+        MODULE_DELETED = "module_deleted", "Module deleted"
+        QUIZ_HOSTED = "quiz_hosted", "Quiz hosted"
+        QUIZ_ENDED = "quiz_ended", "Quiz ended"
+        QUIZ_JOINED = "quiz_joined", "Quiz joined"
+        USER_CREATED = "user_created", "User created"
+        USER_UPDATED = "user_updated", "User updated"
+        USER_DELETED = "user_deleted", "User deleted"
+        SESSION_ENDED = "session_ended", "Session ended"
+        REPORT_DOWNLOADED = "report_downloaded", "Report downloaded"
+        BANK_ADDED = "bank_added", "Bank question imported"
+        QUESTION_BANKED = "question_banked", "Question saved to bank"
+
+    actor = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="activity_logs"
+    )
+    action = models.CharField(max_length=30, choices=Action.choices)
+    target = models.CharField(max_length=200, blank=True)
+    details = models.CharField(max_length=500, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        indexes = [
+            models.Index(fields=["actor", "-created_at"]),
+            models.Index(fields=["action", "-created_at"]),
+        ]
+
+    def __str__(self):
+        return f"{self.actor} · {self.action} · {self.created_at:%Y-%m-%d %H:%M}"
+
+
+def log_activity(actor, action, target="", details=""):
+    ActivityLog.objects.create(
+        actor=actor, action=action, target=target, details=details
+    )

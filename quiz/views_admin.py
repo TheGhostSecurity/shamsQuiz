@@ -8,7 +8,7 @@ from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
-from .models import Answer, Module, Participant, Question, QuizSession
+from .models import ActivityLog, Answer, Module, Participant, Question, QuizSession
 
 User = get_user_model()
 
@@ -143,6 +143,7 @@ def user_create(request):
                 user.is_staff = data["is_staff"]
                 user.save()
                 messages.success(request, f"User '{user.username}' created.")
+                log_activity(request.user, ActivityLog.Action.USER_CREATED, user.username)
                 return redirect("admin:users")
     else:
         form = AdminUserForm()
@@ -168,6 +169,7 @@ def user_edit(request, user_id):
             user.is_staff = data["is_staff"]
             user.save()
             messages.success(request, f"User '{user.username}' updated.")
+            log_activity(request.user, ActivityLog.Action.USER_UPDATED, user.username)
             return redirect("admin:users")
     else:
         form = AdminUserForm(
@@ -195,6 +197,7 @@ def user_delete(request, user_id):
             name = user.username
             user.delete()
             messages.success(request, f"User '{name}' deleted.")
+            log_activity(request.user, ActivityLog.Action.USER_DELETED, name)
     return redirect("admin:users")
 
 
@@ -233,6 +236,7 @@ def module_delete(request, module_id):
         title = module.title
         module.delete()
         messages.success(request, f"Module '{title}' deleted.")
+        log_activity(request.user, ActivityLog.Action.MODULE_DELETED, title)
     return redirect("admin:modules")
 
 
@@ -291,6 +295,11 @@ def session_end(request, session_id):
         session.ended_at = timezone.now()
         session.save(update_fields=["status", "ended_at"])
         messages.success(request, f"Session {session.code} ended.")
+        log_activity(
+            request.user,
+            ActivityLog.Action.SESSION_ENDED,
+            f"{session.code} · {session.module.title}",
+        )
     return redirect("admin:session_detail", session_id=session.id)
 
 
@@ -333,4 +342,74 @@ def answers(request):
         request,
         "admin/answers.html",
         {"answers": _paginate(request, queryset), "q": q, "correct": correct, "base_query": _base_query(request)},
+    )
+
+
+@admin_required
+def teachers(request):
+    q = request.GET.get("q", "").strip()
+    queryset = (
+        User.objects.filter(role=User.Role.TEACHER)
+        .annotate(
+            module_count=Count("modules", distinct=True),
+            session_count=Count("hosted_sessions", distinct=True),
+            ended_count=Count(
+                "hosted_sessions",
+                distinct=True,
+                filter=Q(hosted_sessions__status=QuizSession.Status.ENDED),
+            ),
+            player_count=Count(
+                "hosted_sessions__participants",
+                distinct=True,
+            ),
+            answer_count=Count("hosted_sessions__participants__answers", distinct=True),
+            activity_count=Count("activity_logs", distinct=True),
+        )
+        .order_by("-date_joined")
+    )
+    if q:
+        queryset = queryset.filter(
+            Q(username__icontains=q)
+            | Q(first_name__icontains=q)
+            | Q(last_name__icontains=q)
+            | Q(email__icontains=q)
+        )
+    return render(
+        request,
+        "admin/teachers.html",
+        {"teachers": _paginate(request, queryset), "q": q, "base_query": _base_query(request)},
+    )
+
+
+@admin_required
+def logs(request):
+    q = request.GET.get("q", "").strip()
+    action = request.GET.get("action", "").strip()
+    actor_id = request.GET.get("actor", "").strip()
+    queryset = ActivityLog.objects.select_related("actor").order_by("-created_at")
+    if q:
+        queryset = queryset.filter(
+            Q(actor__username__icontains=q)
+            | Q(actor__first_name__icontains=q)
+            | Q(target__icontains=q)
+        )
+    if action and action in ActivityLog.Action.values:
+        queryset = queryset.filter(action=action)
+    if actor_id.isdigit():
+        queryset = queryset.filter(actor_id=int(actor_id))
+    actor_user = None
+    if actor_id.isdigit():
+        actor_user = User.objects.filter(pk=int(actor_id)).first()
+    return render(
+        request,
+        "admin/logs.html",
+        {
+            "logs": _paginate(request, queryset, per=30),
+            "q": q,
+            "action": action,
+            "action_options": ActivityLog.Action.choices,
+            "actor_user": actor_user,
+            "actor_id": actor_id,
+            "base_query": _base_query(request),
+        },
     )

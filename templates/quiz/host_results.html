@@ -1,64 +1,55 @@
 {% extends "base.html" %}
 
 {% block title %}Results · {{ session.code }} · ShamsQuiz{% endblock %}
-{% block body_class %}bg-[#001f2e] text-white antialiased{% endblock %}
-{% block main_class %}min-h-screen{% endblock %}
-{% block messages_wrap %}mx-auto mt-4 max-w-6xl space-y-2 px-4{% endblock %}
+{% block body_class %}bg-[#f7f7f7] text-[#1f1f1f] antialiased{% endblock %}
+{% block main_class %}min-h-screen bg-[#f7f7f7]{% endblock %}
+{% block topbar %}{% include "partials/topnav.html" %}{% endblock %}
 
 {% block content %}
-<div class="flex min-h-screen flex-col">
-    <header class="flex items-center justify-between border-b border-white/10 bg-[#002b3f] px-5 py-4">
-        <div class="flex items-center gap-2.5">
-            <span class="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-[#54b6ff] to-[#0078d4] text-white">
-                <i data-lucide="sun" class="h-4 w-4"></i>
-            </span>
-            <span class="font-bold">ShamsQuiz &mdash; Results</span>
-        </div>
-        <div class="flex items-center gap-3">
-            <span class="rounded-lg bg-white/10 px-3 py-1.5 text-sm font-bold tracking-widest">{{ session.code }}</span>
-            <a class="rounded-lg border border-white/20 px-3 py-1.5 text-sm font-semibold text-white/70 hover:bg-white/10" href="{% url 'dashboard' %}">Dashboard</a>
-        </div>
-    </header>
+<div class="mx-auto max-w-4xl px-5 py-10">
+    <p class="text-center text-sm font-semibold uppercase tracking-[0.2em] text-[#0067c0]">{{ session.module.title }}</p>
+    <h1 class="mt-2 text-center text-3xl font-bold tracking-tight text-black">Final results</h1>
 
-    <main class="mx-auto w-full max-w-4xl flex-1 px-5 py-10">
-        <p class="text-center text-sm font-semibold uppercase tracking-[0.2em] text-[#93c5fd]">{{ session.module.title }}</p>
-        <h1 class="mt-2 text-center text-3xl font-black">Final results</h1>
-
-        <div class="mt-10">
-            {% for player in podium %}
-                {% if forloop.first %}
-                    <div class="mb-8 text-center">
-                        <div class="mx-auto grid h-24 w-24 place-items-center rounded-full bg-[#d99322]/20 text-4xl font-black text-[#d99322] ring-4 ring-[#d99322]/40">
-                            {{ player.name|slice:":1"|upper }}
-                        </div>
-                        <p class="mt-3 text-xl font-black">{{ player.name }}</p>
-                        <p class="text-sm font-bold text-[#d99322]">{{ player.score }} pts</p>
-                        <span class="mt-1 inline-block rounded-full bg-[#d99322]/15 px-3 py-1 text-xs font-bold uppercase tracking-widest text-[#d99322]">1st place</span>
+    <div class="mt-10">
+        {% for player in podium %}
+            {% if forloop.first %}
+                <div class="mb-8 text-center">
+                    <div class="mx-auto grid h-24 w-24 place-items-center rounded-full bg-[#fff7ed] text-4xl font-black text-[#d99322] ring-4 ring-[#d99322]/30">
+                        {{ player.name|slice:":1"|upper }}
                     </div>
-                {% endif %}
+                    <p class="mt-3 text-xl font-bold text-black">{{ player.name }}</p>
+                    <p class="text-base font-bold text-[#c47019]">{{ player.score }} pts</p>
+                    <span class="mt-1 inline-block rounded-full bg-[#d99322] px-3 py-1 text-xs font-bold uppercase tracking-widest text-white">1st place</span>
+                </div>
+            {% endif %}
+        {% endfor %}
+
+        <ul class="mx-auto max-w-xl space-y-2">
+            {% for player in podium %}
+                <li class="flex items-center gap-4 rounded-xl border border-[#e7e7e7] bg-white px-4 py-3 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md {% if forloop.first %}border-[#f0c98a] bg-[#fffdf7]{% endif %}">
+                    <span class="grid h-8 w-8 shrink-0 place-items-center rounded-full {% if forloop.counter == 1 %}bg-[#d99322] text-white{% elif forloop.counter == 2 %}bg-[#9aa4b0] text-white{% elif forloop.counter == 3 %}bg-[#c47019] text-white{% else %}bg-[#eaf4ff] text-[#0067c0]{% endif %} text-sm font-bold">
+                        {{ forloop.counter }}
+                    </span>
+                    <span class="font-semibold text-black">{{ player.name }}</span>
+                    <span class="ml-auto text-xs font-semibold text-[#8c8c8c]">#{{ forloop.counter }}</span>
+                    <span class="font-bold text-[#0067c0]">{{ player.score }} pts</span>
+                </li>
+            {% empty %}
+                <li class="rounded-xl border border-[#e7e7e7] bg-white px-4 py-10 text-center text-[#5c5c5c]">No players joined this quiz.</li>
             {% endfor %}
+        </ul>
+    </div>
 
-            <ul class="mx-auto max-w-xl space-y-1.5 rounded-3xl border border-white/10 bg-white/5 p-4">
-                {% for player in podium %}
-                    <li class="flex items-center gap-4 rounded-2xl px-4 py-3 {% if forloop.first %}bg-[#d99322]/10{% else %}bg-white/5{% endif %}">
-                        <span class="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#0067c0] text-sm font-bold">
-                            {{ player.name|slice:":1"|upper }}
-                        </span>
-                        <span class="font-semibold">{{ player.name }}</span>
-                        <span class="ml-auto text-xs font-bold text-white/50">#{{ forloop.counter }}</span>
-                        <span class="font-black text-white">{{ player.score }} pts</span>
-                    </li>
-                {% empty %}
-                    <li class="px-4 py-10 text-center text-white/60">No players joined this quiz.</li>
-                {% endfor %}
-            </ul>
-        </div>
-
-        <div class="mt-10 text-center">
-            <a class="inline-flex items-center gap-2 rounded-2xl bg-[#0078d4] px-8 py-4 text-base font-black text-white shadow-xl shadow-[#0078d4]/40 hover:bg-[#37a5ff]" href="{% url 'start_quiz' session.module.id %}">
-                <i data-lucide="rotate-ccw" class="h-4 w-4"></i> Play again
-            </a>
-        </div>
-    </main>
+    <div class="mt-10 flex items-center justify-center gap-3">
+        <a class="inline-flex items-center gap-2 rounded-lg bg-[#0067c0] px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-[#005a9e]" href="{% url 'teacher_history' %}">
+            <i data-lucide="chart-column-big" class="h-4 w-4"></i> View analytics
+        </a>
+        <a class="inline-flex items-center gap-2 rounded-lg border border-[#c8c8c8] bg-white px-6 py-3 text-sm font-semibold text-[#0067c0] hover:bg-[#eaf4ff]" href="{% url 'session_report' session.id %}">
+            <i data-lucide="file-down" class="h-4 w-4"></i> PDF report
+        </a>
+        <a class="inline-flex items-center gap-2 rounded-lg bg-[#002b3f] px-6 py-3 text-sm font-semibold text-white hover:bg-[#001f2e]" href="{% url 'start_quiz' session.module.id %}">
+            <i data-lucide="rotate-ccw" class="h-4 w-4"></i> Play again
+        </a>
+    </div>
 </div>
 {% endblock %}

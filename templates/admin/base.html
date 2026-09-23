@@ -116,6 +116,53 @@
         background: #eaf4ff;
         color: #0067c0;
     }
+    html.dark .admin-input {
+        background: #0f172a;
+        border-color: #334155;
+        color: #e5e7eb;
+    }
+    html.dark .admin-input:focus {
+        border-color: #0067c0;
+        box-shadow: 0 0 0 2px #1e3a5f;
+    }
+    html.dark .admin-label {
+        color: #cbd5e1;
+    }
+    html.dark .admin-btn-outline {
+        background: #0f172a;
+        border-color: #334155;
+        color: #cbd5e1;
+    }
+    html.dark .admin-btn-outline:hover {
+        background: #1f2937;
+        color: #e5e7eb;
+    }
+    html.dark .admin-card {
+        background: #0f172a;
+        border-color: #233042;
+        box-shadow: none;
+    }
+    html.dark .admin-th {
+        background: #111827;
+        color: #94a3b8;
+        border-bottom-color: #233042;
+    }
+    html.dark .admin-td {
+        border-bottom-color: #1f2937;
+    }
+    html.dark .admin-link {
+        color: #7cc0ff;
+    }
+    html.dark .admin-nav-link {
+        color: #cbd5e1;
+    }
+    html.dark .admin-nav-link:hover {
+        background: #1f2937;
+    }
+    html.dark .admin-nav-active {
+        background: #0e2138;
+        color: #7cc0ff;
+    }
 </style>
 
 <div class="flex min-h-screen">
@@ -148,12 +195,21 @@
             <a href="{% url 'admin:answers' %}" class="admin-nav-link {% if request.resolver_match.url_name == 'answers' %}admin-nav-active{% endif %}">
                 <i data-lucide="list-checks" class="h-4 w-4"></i> Answers
             </a>
+            <a href="{% url 'admin:teachers' %}" class="admin-nav-link {% if request.resolver_match.url_name == 'teachers' %}admin-nav-active{% endif %}">
+                <i data-lucide="presentation" class="h-4 w-4"></i> Teachers
+            </a>
+            <a href="{% url 'admin:logs' %}" class="admin-nav-link {% if request.resolver_match.url_name == 'logs' %}admin-nav-active{% endif %}">
+                <i data-lucide="scroll-text" class="h-4 w-4"></i> Activity log
+            </a>
         </nav>
 
         <div class="space-y-1 border-t border-[#ededed] px-3 py-3">
-            <a href="{% url 'home' %}" class="admin-nav-link" target="_blank" rel="noopener">
-                <i data-lucide="external-link" class="h-4 w-4"></i> View site
-            </a>
+            <div class="flex items-center justify-between gap-2">
+                {% include "partials/theme_toggle.html" %}
+                <a href="{% url 'home' %}" class="admin-nav-link flex-1 justify-center" target="_blank" rel="noopener">
+                    <i data-lucide="external-link" class="h-4 w-4"></i> View site
+                </a>
+            </div>
             <a href="{% url 'dashboard' %}" class="admin-nav-link">
                 <i data-lucide="arrow-left-right" class="h-4 w-4"></i> Teacher area
             </a>

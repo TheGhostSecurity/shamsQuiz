@@ -61,6 +61,12 @@
                     </div>
                     <div class="flex items-center gap-2">
                         <a class="rounded border border-[#c8c8c8] bg-white px-3 py-1.5 text-xs font-semibold text-[#424242] hover:bg-[#f7f7f7]" href="{% url 'question_edit' module.id question.id %}">Edit</a>
+                        <form action="{% url 'question_to_bank' module.id question.id %}" method="post">
+                            {% csrf_token %}
+                            <button class="inline-flex items-center gap-1 rounded border border-[#b7d8ff] bg-[#eaf4ff] px-3 py-1.5 text-xs font-semibold text-[#0067c0] hover:bg-[#d8ecff]" type="submit">
+                                <i data-lucide="library" class="h-3 w-3"></i> Save to bank
+                            </button>
+                        </form>
                         <form action="{% url 'question_delete' module.id question.id %}" method="post" onsubmit="return confirm('Delete this question?')">
                             {% csrf_token %}
                             <button class="rounded border border-[#f3b3a6] bg-white px-3 py-1.5 text-xs font-semibold text-[#c43e1c] hover:bg-[#fff7ed]" type="submit">Delete</button>

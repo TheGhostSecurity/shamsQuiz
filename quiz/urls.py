@@ -1,4 +1,3 @@
-from django.contrib.auth import views as auth_views
 from django.urls import path
 
 from . import views
@@ -13,10 +12,21 @@ urlpatterns = [
     ),
     path(
         "logout/",
-        auth_views.LogoutView.as_view(),
+        views.logout_view,
         name="logout",
     ),
     path("dashboard/", views.dashboard, name="dashboard"),
+    path("teacher/history/", views.teacher_history, name="teacher_history"),
+    path(
+        "teacher/history/<int:session_id>/report/",
+        views.session_report,
+        name="session_report",
+    ),
+    path(
+        "teacher/history/<int:session_id>/chart/",
+        views.session_chart,
+        name="session_chart",
+    ),
 
     # Teacher: modules
     path("modules/", views.module_list, name="module_list"),
@@ -52,6 +62,19 @@ urlpatterns = [
         "modules/<int:module_id>/questions/<int:question_id>/delete/",
         views.question_delete,
         name="question_delete",
+    ),
+    path(
+        "modules/<int:module_id>/questions/<int:question_id>/to-bank/",
+        views.question_to_bank,
+        name="question_to_bank",
+    ),
+
+    # Teacher: question bank
+    path("bank/", views.bank, name="bank"),
+    path(
+        "bank/<int:bank_id>/add-to/",
+        views.bank_add,
+        name="bank_add",
     ),
 
     # Host (teacher)

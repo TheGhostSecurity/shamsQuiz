@@ -5,6 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="{% block meta_description %}ShamsQuiz — join live quizzes with a code, or create your own question modules.{% endblock %}">
     <title>{% block title %}ShamsQuiz{% endblock %}</title>
+    <script>
+        (function () {
+            try {
+                var stored = localStorage.getItem('shamsTheme');
+                var dark = stored ? stored === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
+                if (dark) document.documentElement.classList.add('dark');
+            } catch (e) {}
+        })();
+    </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
     <script>
@@ -33,6 +42,126 @@
         }
         body {
             zoom: 0.8;
+        }
+        .card-lift {
+            transition: transform .16s ease, box-shadow .16s ease;
+        }
+        .card-lift:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 28px -14px rgba(0, 43, 63, .28);
+        }
+        .card-hover {
+            transition: transform .16s ease, box-shadow .16s ease;
+        }
+        .card-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 22px -12px rgba(0, 43, 63, .25);
+        }
+        .theme-light-icon { display: inline-block; }
+        .theme-dark-icon { display: none; }
+        html.dark .theme-light-icon { display: none; }
+        html.dark .theme-dark-icon { display: inline-block; }
+
+        /* ---------------- Dark mode ---------------- */
+        html.dark body {
+            background-color: #0b1220;
+            color: #d8e1ec;
+        }
+        html.dark img[src^="data:image/png"] {
+            background: #fff;
+            border-radius: 10px;
+            padding: 6px;
+        }
+        /* surfaces */
+        html.dark [class~="bg-white"] { background-color: #0f172a !important; }
+        html.dark [class~="bg-white/80"] { background-color: rgba(15, 23, 42, .93) !important; }
+        html.dark [class~="bg-white/90"] { background-color: rgba(15, 23, 42, .95) !important; }
+        html.dark [class~="bg-[#f7f7f7]"] { background-color: #0b1220 !important; }
+        html.dark [class~="bg-[#fafafa]"] { background-color: #111827 !important; }
+        html.dark [class~="bg-[#f3f3f3]"] { background-color: #1f2937 !important; }
+        html.dark [class~="bg-[#f0f0f0]"] { background-color: #1f2937 !important; }
+        html.dark [class~="bg-[#e7e7e7]"] { background-color: #233042 !important; }
+        html.dark [class~="bg-[#eaf4ff]"] { background-color: #0e2138 !important; }
+        html.dark [class~="bg-[#eaf4ff]/60"] { background-color: rgba(14, 33, 56, .74) !important; }
+        html.dark [class~="bg-[#ecfdf3]"] { background-color: #0f2a1d !important; }
+        html.dark [class~="bg-[#fdf2f8]"] { background-color: #2a1424 !important; }
+        html.dark [class~="bg-[#f0f6ff]"] { background-color: #0f1e33 !important; }
+        html.dark [class~="bg-[#fff7e6]"] { background-color: #2a2010 !important; }
+        html.dark [class~="bg-[#fff7ed]"] { background-color: #2a2010 !important; }
+        html.dark [class~="bg-[#fffdf7]"] { background-color: #1f180e !important; }
+        html.dark [class~="bg-[#d5f5e6]"] { background-color: #123726 !important; }
+        /* text */
+        html.dark [class~="text-black"] { color: #e5e7eb !important; }
+        html.dark [class~="text-[#1f1f1f]"] { color: #e5e7eb !important; }
+        html.dark [class~="text-[#002b3f]"] { color: #d3dce5 !important; }
+        html.dark [class~="text-[#424242]"] { color: #cbd5e1 !important; }
+        html.dark [class~="text-[#5c5c5c]"] { color: #94a3b8 !important; }
+        html.dark [class~="text-[#8c8c8c]"] { color: #64748b !important; }
+        html.dark [class~="text-[#0067c0]"] { color: #7cc0ff !important; }
+        html.dark [class~="text-[#005a9e]"] { color: #7cc0ff !important; }
+        html.dark [class~="text-[#004f8f]"] { color: #7cc0ff !important; }
+        html.dark [class~="text-[#1565c0]"] { color: #7cc0ff !important; }
+        html.dark [class~="text-[#107c41]"] { color: #34d399 !important; }
+        html.dark [class~="text-[#be185d]"] { color: #f79ab8 !important; }
+        html.dark [class~="text-[#c43e1c]"] { color: #ff9d87 !important; }
+        html.dark [class~="text-[#c47019]"] { color: #f2b25c !important; }
+        html.dark [class~="text-[#d99322]"] { color: #f5bd5e !important; }
+        html.dark [class~="text-[#dc2626]"] { color: #f87171 !important; }
+        html.dark [class~="text-[#7c3aed]"] { color: #a78bfa !important; }
+        html.dark [class~="text-sun-600"] { color: #f5bd5e !important; }
+        html.dark [class~="text-brand-500"] { color: #37a5ff !important; }
+        html.dark [class~="text-brand-600"] { color: #7cc0ff !important; }
+        html.dark [class~="text-brand-700"] { color: #7cc0ff !important; }
+        /* hovers */
+        html.dark [class~="hover:bg-[#fafafa]"]:hover { background-color: #1e293b !important; }
+        html.dark [class~="hover:bg-[#f7f7f7]"]:hover { background-color: #1b2536 !important; }
+        html.dark [class~="hover:bg-[#f3f3f3]"]:hover { background-color: #253041 !important; }
+        html.dark [class~="hover:bg-[#eaf4ff]"]:hover { background-color: #12283f !important; }
+        html.dark [class~="hover:bg-[#d8ecff]"]:hover { background-color: #143049 !important; }
+        html.dark [class~="hover:bg-[#d5f5e6]"]:hover { background-color: #123726 !important; }
+        html.dark [class~="hover:bg-[#fff7ed]"]:hover { background-color: #2a2010 !important; }
+        html.dark [class~="hover:bg-white/90"]:hover { background-color: #1a2436 !important; }
+        html.dark [class~="hover:text-[#0067c0]"]:hover { color: #9cd3ff !important; }
+        html.dark [class~="hover:text-[#002b3f]"]:hover { color: #e5e7eb !important; }
+        html.dark [class~="hover:text-[#dc2626]"]:hover { color: #f87171 !important; }
+        /* borders */
+        html.dark [class~="border-[#e7e7e7]"] { border-color: #233042 !important; }
+        html.dark [class~="border-[#e8e8e8]"] { border-color: #233042 !important; }
+        html.dark [class~="border-[#ededed]"] { border-color: #222e40 !important; }
+        html.dark [class~="border-[#e0e0e0]"] { border-color: #233042 !important; }
+        html.dark [class~="border-[#f0f0f0]"] { border-color: #1f2937 !important; }
+        html.dark [class~="border-[#c8c8c8]"] { border-color: #3a4a63 !important; }
+        html.dark [class~="border-[#d6d6d6]"] { border-color: #334155 !important; }
+        html.dark [class~="border-[#b7d8ff]"] { border-color: #1e3a5f !important; }
+        html.dark [class~="border-[#cfe4ff]"] { border-color: #1d3856 !important; }
+        html.dark [class~="border-[#f0c98a]"] { border-color: #4a3a1c !important; }
+        html.dark [class~="border-[#b9e6cd]"] { border-color: #1c4d35 !important; }
+        html.dark [class~="border-[#d6cff0]"] { border-color: #3a3470 !important; }
+        html.dark [class~="border-[#f3b3a6]"] { border-color: #64332c !important; }
+        html.dark [class~="border-[#0067c0]"] { border-color: #2f77c0 !important; }
+        html.dark [class~="border-[#0078d4]/30"] { border-color: rgba(55, 165, 255, .3) !important; }
+        html.dark [class~="border-[#54b6ff]"] { border-color: #2b6f9c !important; }
+        html.dark [class~="border-[#107c41]"] { border-color: #2c8a5a !important; }
+        html.dark [class~="border-[#dc2626]"] { border-color: #b84747 !important; }
+        html.dark [class~="hover:border-[#dc2626]"]:hover { border-color: #b84747 !important; }
+        /* dividers */
+        html.dark [class~="divide-[#ededed]"] > :not([hidden]) ~ :not([hidden]) { border-color: #233042 !important; }
+        html.dark [class~="divide-[#f0f0f0]"] > :not([hidden]) ~ :not([hidden]) { border-color: #1f2937 !important; }
+        /* rings + focus */
+        html.dark [class~="ring-[#b7d8ff]"] { --tw-ring-color: #1e3a5f !important; }
+        html.dark [class~="ring-[#0078d4]/40"] { --tw-ring-color: rgba(55, 165, 255, .35) !important; }
+        html.dark [class~="focus:ring-[#0078d4]/40"]:focus { --tw-ring-color: rgba(55, 165, 255, .35) !important; }
+        html.dark [class~="focus:border-[#54b6ff]"]:focus { border-color: #2b6f9c !important; }
+        /* hero gradients */
+        html.dark [class~="from-white"] {
+            --tw-gradient-from: #0f172a;
+            --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, #0f172a);
+        }
+        html.dark [class~="via-[#f6fbff]"] {
+            --tw-gradient-stops: var(--tw-gradient-from), #0f1d30, var(--tw-gradient-to, var(--tw-gradient-from));
+        }
+        html.dark [class~="to-[#dff3ff]"] {
+            --tw-gradient-to: #123047;
         }
     </style>
     {% block head_extra %}{% endblock %}
@@ -75,7 +204,45 @@
         }
         document.addEventListener('DOMContentLoaded', function () {
             if (window.lucide) window.lucide.createIcons();
+            animateCounts();
         });
+    </script>
+    <script>
+        function animateCounts() {
+            document.querySelectorAll('[data-count]').forEach(function (el) {
+                var target = parseFloat(el.getAttribute('data-count')) || 0;
+                var suffix = el.getAttribute('data-suffix') || '';
+                el.textContent = '0' + suffix;
+                var dur = 900;
+                var t0 = null;
+                function frame(t) {
+                    if (!t0) t0 = t;
+                    var p = Math.min((t - t0) / dur, 1);
+                    var eased = 1 - Math.pow(1 - p, 3);
+                    var val = Math.round(target * eased);
+                    el.textContent = val.toLocaleString() + suffix;
+                    if (p < 1) requestAnimationFrame(frame);
+                }
+                requestAnimationFrame(frame);
+            });
+        }
+        if (document.readyState !== 'loading') {
+            if (window.lucide) window.lucide.createIcons();
+            animateCounts();
+        }
+    </script>
+    <script>
+        (function () {
+            var btn = document.getElementById('theme-toggle');
+            if (!btn) return;
+            btn.addEventListener('click', function () {
+                var el = document.documentElement;
+                el.classList.toggle('dark');
+                try {
+                    localStorage.setItem('shamsTheme', el.classList.contains('dark') ? 'dark' : 'light');
+                } catch (e) {}
+            });
+        })();
     </script>
     {% block extra_js %}{% endblock %}
 </body>

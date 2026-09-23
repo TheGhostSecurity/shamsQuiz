@@ -1,10 +1,10 @@
 import json
 
 from django.contrib import messages
-from django.contrib.auth import login
+from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
-from django.db.models import Count
-from django.http import JsonResponse
+from django.db.models import Avg, Count, Q
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
@@ -16,7 +16,23 @@ from .forms import (
     QuestionForm,
     SignUpForm,
 )
-from .models import Answer, Module, Participant, Question, QuizSession, User
+from .models import (
+    ActivityLog,
+    Answer,
+    BankChoice,
+    BankQuestion,
+    Module,
+    Participant,
+    Question,
+    QuizSession,
+    User,
+    log_activity,
+)
+from . import charts, reporting
+
+
+def _leaderboard_list(session):
+    return sorted(session.participants.all(), key=lambda p: p.score, reverse=True)
 
 
 def home(request):
@@ -33,6 +49,7 @@ def signup_view(request):
             user.role = form.cleaned_data["role"]
             user.save()
             login(request, user)
+            log_activity(user, ActivityLog.Action.SIGNUP, user.username)
             messages.success(request, f"Welcome to ShamsQuiz, {user.username}!")
             return redirect("dashboard")
     else:
@@ -48,10 +65,18 @@ def login_view(request):
         if form.is_valid():
             user = form.get_user()
             login(request, user)
+            log_activity(user, ActivityLog.Action.LOGIN, user.username)
             return redirect("admin:index" if user.is_staff else "dashboard")
     else:
         form = LoginForm()
     return render(request, "registration/login.html", {"form": form})
+
+
+def logout_view(request):
+    if request.user.is_authenticated:
+        log_activity(request.user, ActivityLog.Action.LOGOUT, request.user.username)
+        logout(request)
+    return redirect("home")
 
 
 @login_required
@@ -75,10 +100,30 @@ def dashboard(request):
                 session__status=QuizSession.Status.ENDED,
             ).count()
         )
+        live_sessions_list = (
+            QuizSession.objects.filter(
+                host=user,
+            )
+            .exclude(status=QuizSession.Status.ENDED)
+            .select_related("module")
+            .annotate(players=Count("participants"))
+            .order_by("-created_at")
+        )
+        recent_quizzes = (
+            QuizSession.objects.filter(
+                host=user,
+                status=QuizSession.Status.ENDED,
+            )
+            .select_related("module")
+            .annotate(num_players=Count("participants"))
+            .order_by("-ended_at", "-created_at")[:5]
+        )
         context = {
             "modules": modules,
             "total_questions": total_questions,
             "live_sessions": live_sessions,
+            "live_sessions_list": live_sessions_list,
+            "recent_quizzes": recent_quizzes,
             "total_participants": total_participants,
         }
         return render(request, "quiz/teacher_dashboard.html", context)
@@ -116,6 +161,11 @@ def module_create(request):
             module = form.save(commit=False)
             module.teacher = request.user
             module.save()
+            log_activity(
+                request.user,
+                ActivityLog.Action.MODULE_CREATED,
+                module.title,
+            )
             messages.success(request, "Module created. Now add some questions!")
             return redirect("module_detail", module_id=module.id)
     else:
@@ -144,6 +194,7 @@ def module_edit(request, module_id):
 @login_required
 def module_delete(request, module_id):
     module = get_object_or_404(Module, pk=module_id, teacher=request.user)
+    log_activity(request.user, ActivityLog.Action.MODULE_DELETED, module.title)
     module.delete()
     messages.success(request, "Module deleted.")
     return redirect("module_list")
@@ -210,6 +261,116 @@ def question_delete(request, module_id, question_id):
     return redirect("module_detail", module_id=module.id)
 
 
+# ---------------- Question bank ----------------
+
+
+def _teacher_only(request):
+    if not request.user.is_teacher:
+        messages.error(request, "Teachers only.")
+        return redirect("dashboard")
+    return None
+
+
+@login_required
+def bank(request):
+    response = _teacher_only(request)
+    if response:
+        return response
+
+    q = request.GET.get("q", "").strip()
+    subject = request.GET.get("subject", "").strip()
+    questions = BankQuestion.objects.select_related("added_by").prefetch_related(
+        "choices"
+    )
+    if q:
+        questions = questions.filter(
+            Q(text__icontains=q) | Q(subject__icontains=q)
+        )
+    if subject:
+        questions = questions.filter(subject=subject)
+
+    subjects = (
+        BankQuestion.objects.exclude(subject="")
+        .values_list("subject", flat=True)
+        .distinct()
+        .order_by("subject")
+    )
+    modules = Module.objects.filter(teacher=request.user)
+
+    return render(
+        request,
+        "quiz/bank.html",
+        {
+            "questions": questions,
+            "modules": modules,
+            "q": q,
+            "subject": subject,
+            "subjects": subjects,
+        },
+    )
+
+
+@login_required
+def bank_add(request, bank_id):
+    response = _teacher_only(request)
+    if response:
+        return response
+    bank_q = get_object_or_404(BankQuestion, pk=bank_id)
+    try:
+        module = Module.objects.get(pk=int(request.POST.get("module_id", "")), teacher=request.user)
+    except (ValueError, Module.DoesNotExist):
+        messages.error(request, "Choose one of your modules to import into.")
+        return redirect("bank")
+    question = Question.objects.create(
+        module=module,
+        text=bank_q.text,
+        time_limit=bank_q.time_limit,
+        points=bank_q.points,
+    )
+    for choice in bank_q.choices.all():
+        question.choices.create(
+            text=choice.text,
+            is_correct=choice.is_correct,
+            order=choice.order,
+        )
+    log_activity(
+        request.user,
+        ActivityLog.Action.BANK_ADDED,
+        f"{bank_q.text[:60]} → {module.title}",
+    )
+    messages.success(request, f"Question imported into “{module.title}”.")
+    return redirect("bank")
+
+
+@login_required
+def question_to_bank(request, module_id, question_id):
+    response = _teacher_only(request)
+    if response:
+        return response
+    module = get_object_or_404(Module, pk=module_id, teacher=request.user)
+    question = get_object_or_404(Question, pk=question_id, module=module)
+    bank_q = BankQuestion.objects.create(
+        text=question.text,
+        time_limit=question.time_limit,
+        points=question.points,
+        added_by=request.user,
+    )
+    for choice in question.choices.all():
+        BankChoice.objects.create(
+            question=bank_q,
+            text=choice.text,
+            is_correct=choice.is_correct,
+            order=choice.order,
+        )
+    log_activity(
+        request.user,
+        ActivityLog.Action.QUESTION_BANKED,
+        f"{question.text[:60]} ← {module.title}",
+    )
+    messages.success(request, "Question saved to the bank.")
+    return redirect("module_detail", module_id=module.id)
+
+
 # ---------------- Live quiz: host ----------------
 
 
@@ -222,6 +383,11 @@ def start_quiz(request, module_id):
     session = QuizSession.objects.create(
         module=module,
         host=request.user,
+    )
+    log_activity(
+        request.user,
+        ActivityLog.Action.QUIZ_HOSTED,
+        f"{module.title} ({session.code})",
     )
     messages.success(request, f"Quiz is live! Code: {session.code}")
     return redirect("host_lobby", code=session.code)
@@ -304,6 +470,11 @@ def host_end_quiz(request, code):
         session.status = QuizSession.Status.ENDED
         session.ended_at = timezone.now()
         session.save()
+        log_activity(
+            request.user,
+            ActivityLog.Action.QUIZ_ENDED,
+            f"{session.code} · {session.module.title}",
+        )
         messages.success(request, "Quiz ended. The podium is live for students.")
     return redirect("host_results", code=code)
 
@@ -351,6 +522,11 @@ def join_name(request, code):
             else:
                 participant = Participant.objects.create(
                     session=session, name=name
+                )
+                log_activity(
+                    session.host,
+                    ActivityLog.Action.QUIZ_JOINED,
+                    f"{name} joined {session.code}",
                 )
                 request.session["participant_id"] = participant.id
                 return redirect("student_play", code=session.code)
@@ -579,3 +755,99 @@ def leaderboard_json(request, code):
             ]
         }
     )
+
+
+# ---------------- Teacher: history, analytics, reports ----------------
+
+
+@login_required
+def teacher_history(request):
+    user = request.user
+    if not user.is_teacher:
+        messages.error(request, "Teachers only.")
+        return redirect("dashboard")
+
+    sessions = list(
+        QuizSession.objects.filter(
+            host=user,
+            status=QuizSession.Status.ENDED,
+        )
+        .select_related("module")
+        .annotate(
+            num_players=Count("participants"),
+            avg_score=Avg("participants__score"),
+        )
+        .order_by("-ended_at", "-created_at")
+    )
+
+    for s in sessions:
+        s.sorted_players = sorted(
+            s.participants.all(), key=lambda p: p.score, reverse=True
+        )[:5]
+
+    labels = [
+        f"{s.ended_at:%b %d}" if s.ended_at else f"{s.created_at:%b %d}"
+        for s in sessions
+    ]
+    scores = [round(s.avg_score or 0) for s in sessions]
+    player_counts = [s.num_players for s in sessions]
+
+    correct = Answer.objects.filter(
+        participant__session__host=user,
+        choice__is_correct=True,
+    ).count()
+    wrong = Answer.objects.filter(
+        participant__session__host=user,
+        choice__is_correct=False,
+    ).count()
+
+    totals = {
+        "quizzes": len(sessions),
+        "players": sum(player_counts),
+        "answers": correct + wrong,
+        "accuracy": round(correct / (correct + wrong) * 100)
+        if (correct + wrong)
+        else 0,
+    }
+
+    return render(
+        request,
+        "quiz/teacher_history.html",
+        {
+            "sessions": sessions,
+            "trend_chart": charts.score_trend(labels, scores),
+            "participation_chart": charts.participation_chart(labels, player_counts),
+            "accuracy_donut": charts.accuracy_donut(correct, wrong),
+            "totals": totals,
+        },
+    )
+
+
+@login_required
+def session_chart(request, session_id):
+    session = get_object_or_404(QuizSession, pk=session_id, host=request.user)
+    participants = list(session.participants.all())
+    png = charts.leaderboard_png(
+        [p.name for p in participants],
+        [p.score for p in participants],
+    )
+    if not png:
+        return HttpResponse(status=204)
+    return HttpResponse(png, content_type="image/png")
+
+
+@login_required
+def session_report(request, session_id):
+    session = get_object_or_404(QuizSession, pk=session_id, host=request.user)
+    leaderboard = _leaderboard_list(session)
+    pdf = reporting.build_session_report(session, leaderboard)
+    log_activity(
+        request.user,
+        ActivityLog.Action.REPORT_DOWNLOADED,
+        f"{session.code} · {session.module.title}",
+    )
+    response = HttpResponse(pdf, content_type="application/pdf")
+    response["Content-Disposition"] = (
+        f'attachment; filename="shamsquiz_report_{session.code}.pdf"'
+    )
+    return response

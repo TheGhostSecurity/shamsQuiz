@@ -34,6 +34,7 @@
                         <span class="hidden sm:inline">Admin</span>
                     </a>
                 {% endif %}
+                {% include "partials/theme_toggle.html" %}
                 <form action="{% url 'logout' %}" method="post">
                     {% csrf_token %}
                     <button class="grid h-9 w-9 place-items-center rounded-full text-[#5c5c5c] hover:bg-[#f3f3f3]" aria-label="Logout" type="submit">
@@ -45,7 +46,6 @@
                 </span>
             {% else %}
                 <a class="rounded-md px-3 py-2 text-sm font-semibold text-[#5c5c5c] hover:bg-[#f3f3f3]" href="{% url 'login' %}">Log in</a>
-                <a class="rounded-md bg-[#0067c0] px-4 py-2 text-sm font-semibold text-white hover:bg-[#005a9e]" href="{% url 'signup' %}">Sign up</a>
             {% endif %}
         </nav>
     </div>
