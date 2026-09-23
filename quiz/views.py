@@ -3,10 +3,12 @@ import json
 from django.contrib import messages
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
+from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.db.models import Avg, Count, Q
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
+from django.views.decorators.http import require_POST
 
 from .forms import (
     JoinForm,
@@ -83,9 +85,7 @@ def logout_view(request):
 def dashboard(request):
     user = request.user
     if user.is_teacher:
-        modules = Module.objects.filter(teacher=user).annotate(
-            num_questions=Count("questions")
-        )
+        modules_count = Module.objects.filter(teacher=user).count()
         total_questions = (
             Question.objects.filter(module__teacher=user).count()
         )
@@ -109,21 +109,26 @@ def dashboard(request):
             .annotate(players=Count("participants"))
             .order_by("-created_at")
         )
-        recent_quizzes = (
+        recent = (
             QuizSession.objects.filter(
                 host=user,
                 status=QuizSession.Status.ENDED,
             )
             .select_related("module")
             .annotate(num_players=Count("participants"))
-            .order_by("-ended_at", "-created_at")[:5]
+            .order_by("-ended_at", "-created_at")
         )
+        paginator = Paginator(recent, 4)
+        try:
+            recent_page = paginator.page(request.GET.get("page", "1"))
+        except (EmptyPage, PageNotAnInteger):
+            recent_page = paginator.page(1)
         context = {
-            "modules": modules,
+            "modules_count": modules_count,
             "total_questions": total_questions,
             "live_sessions": live_sessions,
             "live_sessions_list": live_sessions_list,
-            "recent_quizzes": recent_quizzes,
+            "recent_page": recent_page,
             "total_participants": total_participants,
         }
         return render(request, "quiz/teacher_dashboard.html", context)
@@ -147,7 +152,20 @@ def dashboard(request):
 
 @login_required
 def module_list(request):
-    return redirect("dashboard")
+    response = _teacher_only(request)
+    if response:
+        return response
+    modules = (
+        Module.objects.filter(teacher=request.user)
+        .annotate(num_questions=Count("questions"))
+        .order_by("-updated_at")
+    )
+    paginator = Paginator(modules, 12)
+    try:
+        page = paginator.page(request.GET.get("page", "1"))
+    except (EmptyPage, PageNotAnInteger):
+        page = paginator.page(1)
+    return render(request, "quiz/module_list.html", {"page": page})
 
 
 @login_required
@@ -203,11 +221,17 @@ def module_delete(request, module_id):
 @login_required
 def module_detail(request, module_id):
     module = get_object_or_404(Module, pk=module_id, teacher=request.user)
-    questions = module.questions.all()
+    questions = module.questions.order_by("-is_active", "order", "id")
     return render(
         request,
         "quiz/module_detail.html",
-        {"module": module, "questions": questions},
+        {
+            "module": module,
+            "questions": questions,
+            "active_count": module.questions.filter(is_active=True).count(),
+            "total_count": module.questions.count(),
+            "inactive_count": module.questions.filter(is_active=False).count(),
+        },
     )
 
 
@@ -261,6 +285,20 @@ def question_delete(request, module_id, question_id):
     return redirect("module_detail", module_id=module.id)
 
 
+@login_required
+@require_POST
+def question_toggle(request, module_id, question_id):
+    module = get_object_or_404(Module, pk=module_id, teacher=request.user)
+    question = get_object_or_404(Question, pk=question_id, module=module)
+    question.is_active = not question.is_active
+    question.save(update_fields=["is_active"])
+    if question.is_active:
+        messages.success(request, "Question reactivated and can be hosted again.")
+    else:
+        messages.info(request, "Question deactivated. It won't appear in quizzes unless reactivated.")
+    return redirect("module_detail", module_id=module.id)
+
+
 # ---------------- Question bank ----------------
 
 
@@ -279,35 +317,75 @@ def bank(request):
 
     q = request.GET.get("q", "").strip()
     subject = request.GET.get("subject", "").strip()
-    questions = BankQuestion.objects.select_related("added_by").prefetch_related(
+    show_archived = request.GET.get("archived", "") == "1"
+    base = BankQuestion.objects.select_related("added_by").prefetch_related(
         "choices"
     )
+    if not show_archived:
+        base = base.filter(is_active=True)
     if q:
-        questions = questions.filter(
-            Q(text__icontains=q) | Q(subject__icontains=q)
-        )
+        base = base.filter(Q(text__icontains=q) | Q(subject__icontains=q))
     if subject:
-        questions = questions.filter(subject=subject)
+        base = base.filter(subject=subject)
+    questions = base.order_by("-is_active", "subject", "-created_at")
 
-    subjects = (
-        BankQuestion.objects.exclude(subject="")
-        .values_list("subject", flat=True)
-        .distinct()
+    subject_counts = (
+        base.values("subject")
+        .exclude(subject="")
+        .annotate(count=Count("id"))
         .order_by("subject")
     )
+    archived_count = BankQuestion.objects.filter(is_active=False).count()
     modules = Module.objects.filter(teacher=request.user)
+
+    params = request.GET.copy()
+    params.pop("page", None)
+    base_query = params.urlencode()
+
+    paginator = Paginator(questions, 10)
+    page = paginator.get_page(request.GET.get("page", "1"))
 
     return render(
         request,
         "quiz/bank.html",
         {
-            "questions": questions,
-            "modules": modules,
-            "q": q,
+            "page": page,
+            "subject_counts": subject_counts,
             "subject": subject,
-            "subjects": subjects,
+            "q": q,
+            "modules": modules,
+            "show_archived": show_archived,
+            "archived_count": archived_count,
+            "base_query": base_query,
         },
     )
+
+
+@login_required
+@require_POST
+def bank_question_toggle(request, bank_id):
+    response = _teacher_only(request)
+    if response:
+        return response
+    bank_q = get_object_or_404(BankQuestion, pk=bank_id)
+    bank_q.is_active = not bank_q.is_active
+    bank_q.save(update_fields=["is_active"])
+    if bank_q.is_active:
+        messages.success(request, "Bank question reactivated.")
+    else:
+        messages.info(request, "Bank question deactivated — it won't appear in the bank list.")
+    return redirect("bank")
+
+
+@login_required
+def bank_question_delete(request, bank_id):
+    response = _teacher_only(request)
+    if response:
+        return response
+    bank_q = get_object_or_404(BankQuestion, pk=bank_id)
+    bank_q.delete()
+    messages.success(request, "Bank question deleted.")
+    return redirect("bank")
 
 
 @login_required
@@ -351,6 +429,7 @@ def question_to_bank(request, module_id, question_id):
     question = get_object_or_404(Question, pk=question_id, module=module)
     bank_q = BankQuestion.objects.create(
         text=question.text,
+        subject=module.title,
         time_limit=question.time_limit,
         points=question.points,
         added_by=request.user,
@@ -377,8 +456,11 @@ def question_to_bank(request, module_id, question_id):
 @login_required
 def start_quiz(request, module_id):
     module = get_object_or_404(Module, pk=module_id, teacher=request.user)
-    if module.questions.count() < 1:
-        messages.error(request, "Add at least one question before hosting.")
+    if module.questions.filter(is_active=True).count() < 1:
+        messages.error(
+            request,
+            "Add at least one active question before hosting.",
+        )
         return redirect("module_detail", module_id=module.id)
     session = QuizSession.objects.create(
         module=module,
@@ -767,7 +849,7 @@ def teacher_history(request):
         messages.error(request, "Teachers only.")
         return redirect("dashboard")
 
-    sessions = list(
+    all_sessions = list(
         QuizSession.objects.filter(
             host=user,
             status=QuizSession.Status.ENDED,
@@ -780,17 +862,19 @@ def teacher_history(request):
         .order_by("-ended_at", "-created_at")
     )
 
-    for s in sessions:
+    paginator = Paginator(all_sessions, 5)
+    page = paginator.get_page(request.GET.get("page", "1"))
+    for s in page.object_list:
         s.sorted_players = sorted(
             s.participants.all(), key=lambda p: p.score, reverse=True
         )[:5]
 
     labels = [
         f"{s.ended_at:%b %d}" if s.ended_at else f"{s.created_at:%b %d}"
-        for s in sessions
+        for s in all_sessions
     ]
-    scores = [round(s.avg_score or 0) for s in sessions]
-    player_counts = [s.num_players for s in sessions]
+    scores = [round(s.avg_score or 0) for s in all_sessions]
+    player_counts = [s.num_players for s in all_sessions]
 
     correct = Answer.objects.filter(
         participant__session__host=user,
@@ -802,7 +886,7 @@ def teacher_history(request):
     ).count()
 
     totals = {
-        "quizzes": len(sessions),
+        "quizzes": len(all_sessions),
         "players": sum(player_counts),
         "answers": correct + wrong,
         "accuracy": round(correct / (correct + wrong) * 100)
@@ -814,7 +898,8 @@ def teacher_history(request):
         request,
         "quiz/teacher_history.html",
         {
-            "sessions": sessions,
+            "sessions": all_sessions,
+            "page": page,
             "trend_chart": charts.score_trend(labels, scores),
             "participation_chart": charts.participation_chart(labels, player_counts),
             "accuracy_donut": charts.accuracy_donut(correct, wrong),

@@ -18,22 +18,66 @@
                         {{ request.user.first_name|default:request.user.username }}, welcome back
                     </h1>
                 </div>
-                <span class="grid h-10 w-10 place-items-center rounded-full bg-[#0067c0] text-xs font-bold text-white">
-                    {{ request.user.username|slice:":2"|upper }}
-                </span>
+                <div class="flex items-center gap-3">
+                    <a class="inline-flex items-center gap-2 rounded-lg bg-[#0067c0] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#005a9e]" href="{% url 'module_list' %}">
+                        <i data-lucide="folder-plus" class="h-4 w-4"></i>
+                        New module
+                    </a>
+                    <span class="grid h-10 w-10 place-items-center rounded-full bg-[#0067c0] text-xs font-bold text-white">
+                        {{ request.user.username|slice:":2"|upper }}
+                    </span>
+                </div>
             </div>
         </header>
 
         <main class="space-y-6 p-6 lg:p-8">
+            <section class="overflow-hidden rounded-xl border border-[#e7e7e7] bg-white shadow-sm">
+                <div class="flex items-center justify-between border-b border-[#ededed] px-5 py-4">
+                    <div>
+                        <h2 class="font-semibold text-black">Recent quizzes</h2>
+                        <p class="text-sm text-[#5c5c5c]">Your last finished sessions, ready for analysis.</p>
+                    </div>
+                    <a class="inline-flex items-center gap-1.5 rounded-md border border-[#c8c8c8] bg-white px-3 py-1.5 text-xs font-semibold text-[#0067c0] hover:bg-[#f7f7f7]" href="{% url 'teacher_history' %}">
+                        <i data-lucide="chart-column-big" class="h-3.5 w-3.5"></i>
+                        Open history
+                    </a>
+                </div>
+                <ul class="divide-y divide-[#f0f0f0]">
+                    {% for s in recent_page %}
+                        <li class="flex flex-wrap items-center gap-x-6 gap-y-2 px-5 py-4 hover:bg-[#fafafa]">
+                            <span class="rounded-md bg-[#eaf4ff] px-2.5 py-1 font-mono text-sm font-bold text-[#0067c0]">{{ s.code }}</span>
+                            <span class="font-semibold text-black">{{ s.module.title }}</span>
+                            <span class="text-sm text-[#5c5c5c]">{{ s.num_players }} players</span>
+                            <span class="text-xs text-[#8c8c8c]">{{ s.ended_at|date:"M j, Y · H:i" }}</span>
+                            <div class="ml-auto flex items-center gap-2">
+                                <a class="rounded-md border border-[#c8c8c8] bg-white px-3 py-1.5 text-xs font-semibold text-[#424242] hover:bg-[#f7f7f7]" href="{% url 'host_results' s.code %}">Podium</a>
+                                <a class="rounded-md border border-[#c8c8c8] bg-white px-3 py-1.5 text-xs font-semibold text-[#0067c0] hover:bg-[#eaf4ff]" href="{% url 'session_report' s.id %}">
+                                    <i data-lucide="file-down" class="mr-1 inline h-3 w-3"></i> PDF report
+                                </a>
+                            </div>
+                        </li>
+                    {% empty %}
+                        <li class="px-5 py-10 text-center text-[#5c5c5c]">
+                            <i data-lucide="clock" class="mx-auto mb-3 h-8 w-8 text-[#b7d8ff]"></i>
+                            <p class="font-semibold text-black">No finished quizzes yet</p>
+                            <p class="mt-1 text-sm">Host a quiz and it will show up here when it ends.</p>
+                        </li>
+                    {% endfor %}
+                </ul>
+                {% if recent_page.has_other_pages %}
+                    {% include "partials/pagination.html" with page=recent_page %}
+                {% endif %}
+            </section>
+
             <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                <a class="card-lift rounded-xl border border-[#e0e0e0] bg-white p-5 shadow-sm" href="{% url 'dashboard' %}">
+                <a class="card-lift rounded-xl border border-[#e0e0e0] bg-white p-5 shadow-sm" href="{% url 'module_list' %}">
                     <div class="flex items-center justify-between">
                         <p class="text-xs font-semibold text-[#5c5c5c]">Modules</p>
                         <span class="grid h-9 w-9 place-items-center rounded-lg bg-[#eaf4ff] text-[#0067c0]"><i data-lucide="folder" class="h-4 w-4"></i></span>
                     </div>
-                    <p class="mt-3 text-3xl font-semibold text-black" data-count="{{ modules|length }}">0</p>
+                    <p class="mt-3 text-3xl font-semibold text-black" data-count="{{ modules_count }}">0</p>
                 </a>
-                <a class="card-lift rounded-xl border border-[#e0e0e0] bg-white p-5 shadow-sm" href="{% url 'dashboard' %}">
+                <a class="card-lift rounded-xl border border-[#e0e0e0] bg-white p-5 shadow-sm" href="{% url 'teacher_history' %}">
                     <div class="flex items-center justify-between">
                         <p class="text-xs font-semibold text-[#5c5c5c]">Total questions</p>
                         <span class="grid h-9 w-9 place-items-center rounded-lg bg-[#fff7ed] text-[#c43e1c]"><i data-lucide="list-checks" class="h-4 w-4"></i></span>
@@ -82,97 +126,6 @@
                         {% endfor %}
                     </div>
                 </div>
-            {% endif %}
-
-            <section class="overflow-hidden rounded-xl border border-[#e7e7e7] bg-white shadow-sm">
-                <div class="flex items-center justify-between border-b border-[#ededed] px-5 py-4">
-                    <div>
-                        <h2 class="font-semibold text-black">Your modules</h2>
-                        <p class="text-sm text-[#5c5c5c]">Build a module, then click <strong>Host</strong> to go live.</p>
-                    </div>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full min-w-[700px] text-left text-sm">
-                        <thead class="border-b border-[#ededed] text-[#424242]">
-                            <tr>
-                                <th class="px-6 py-4 font-semibold">Module</th>
-                                <th class="px-6 py-4 font-semibold">Questions</th>
-                                <th class="px-6 py-4 font-semibold">Created</th>
-                                <th class="px-6 py-4 font-semibold">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-[#ededed]">
-                            {% for module in modules %}
-                                <tr class="group hover:bg-[#fafafa]">
-                                    <td class="px-6 py-4">
-                                        <a class="flex items-center gap-3 font-semibold text-black hover:text-[#0067c0]" href="{% url 'module_detail' module.id %}">
-                                            <span class="grid h-9 w-9 place-items-center rounded-lg bg-[#eaf4ff] text-[#0067c0] transition-transform group-hover:scale-110"><i data-lucide="folder" class="h-4 w-4"></i></span>
-                                            <span>
-                                                {{ module.title }}
-                                                {% if module.description %}<p class="mt-0.5 text-xs font-normal text-[#8c8c8c]">{{ module.description|truncatechars:60 }}</p>{% endif %}
-                                            </span>
-                                        </a>
-                                    </td>
-                                    <td class="px-6 py-4">
-                                        <span class="rounded-full bg-[#fff7ed] px-3 py-1 text-xs font-semibold text-[#c43e1c]">{{ module.num_questions }} Q</span>
-                                    </td>
-                                    <td class="px-6 py-4 text-xs text-[#5c5c5c]">{{ module.created_at|date:"M j, Y" }}</td>
-                                    <td class="px-6 py-4">
-                                        <div class="flex items-center gap-2">
-                                            <a class="rounded-md border border-[#c8c8c8] bg-white px-3 py-1.5 text-xs font-semibold text-[#424242] hover:bg-[#f7f7f7]" href="{% url 'module_detail' module.id %}">Open</a>
-                                            <a class="inline-flex items-center gap-1 rounded-md bg-[#ecfdf3] px-3 py-1.5 text-xs font-semibold text-[#107c41] hover:bg-[#d5f5e6]" href="{% url 'start_quiz' module.id %}">
-                                                <i data-lucide="play" class="h-3 w-3"></i> Host
-                                            </a>
-                                        </div>
-                                    </td>
-                                </tr>
-                            {% empty %}
-                                <tr>
-                                    <td class="px-6 py-12 text-center text-[#5c5c5c]" colspan="4">
-                                        <i data-lucide="folder-open" class="mx-auto mb-3 h-10 w-10 text-[#b7d8ff]"></i>
-                                        <p class="font-semibold text-black">No modules yet</p>
-                                        <p class="mt-1 text-sm">Create your first module and start adding questions.</p>
-                                        <a class="mt-4 inline-flex items-center gap-2 rounded-md bg-[#0067c0] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#005a9e]" href="{% url 'module_create' %}">
-                                            <i data-lucide="folder-plus" class="h-4 w-4"></i>
-                                            New module
-                                        </a>
-                                    </td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </section>
-
-            {% if recent_quizzes %}
-                <section class="overflow-hidden rounded-xl border border-[#e7e7e7] bg-white shadow-sm">
-                    <div class="flex items-center justify-between border-b border-[#ededed] px-5 py-4">
-                        <div>
-                            <h2 class="font-semibold text-black">Recent quizzes</h2>
-                            <p class="text-sm text-[#5c5c5c]">Your last finished sessions, ready for analysis.</p>
-                        </div>
-                        <a class="inline-flex items-center gap-1.5 rounded-md border border-[#c8c8c8] bg-white px-3 py-1.5 text-xs font-semibold text-[#0067c0] hover:bg-[#f7f7f7]" href="{% url 'teacher_history' %}">
-                            <i data-lucide="chart-column-big" class="h-3.5 w-3.5"></i>
-                            Open history
-                        </a>
-                    </div>
-                    <ul class="divide-y divide-[#f0f0f0]">
-                        {% for s in recent_quizzes %}
-                            <li class="flex flex-wrap items-center gap-x-6 gap-y-2 px-5 py-4 hover:bg-[#fafafa]">
-                                <span class="rounded-md bg-[#eaf4ff] px-2.5 py-1 font-mono text-sm font-bold text-[#0067c0]">{{ s.code }}</span>
-                                <span class="font-semibold text-black">{{ s.module.title }}</span>
-                                <span class="text-sm text-[#5c5c5c]">{{ s.num_players }} players</span>
-                                <span class="text-xs text-[#8c8c8c]">{{ s.ended_at|date:"M j, Y · H:i" }}</span>
-                                <div class="ml-auto flex items-center gap-2">
-                                    <a class="rounded-md border border-[#c8c8c8] bg-white px-3 py-1.5 text-xs font-semibold text-[#424242] hover:bg-[#f7f7f7]" href="{% url 'host_results' s.code %}">Podium</a>
-                                    <a class="rounded-md border border-[#c8c8c8] bg-white px-3 py-1.5 text-xs font-semibold text-[#0067c0] hover:bg-[#eaf4ff]" href="{% url 'session_report' s.id %}">
-                                        <i data-lucide="file-down" class="mr-1 inline h-3 w-3"></i> PDF report
-                                    </a>
-                                </div>
-                            </li>
-                        {% endfor %}
-                    </ul>
-                </section>
             {% endif %}
         </main>
     </div>

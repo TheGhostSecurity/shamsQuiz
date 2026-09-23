@@ -64,6 +64,11 @@ urlpatterns = [
         name="question_delete",
     ),
     path(
+        "modules/<int:module_id>/questions/<int:question_id>/toggle/",
+        views.question_toggle,
+        name="question_toggle",
+    ),
+    path(
         "modules/<int:module_id>/questions/<int:question_id>/to-bank/",
         views.question_to_bank,
         name="question_to_bank",
@@ -75,6 +80,16 @@ urlpatterns = [
         "bank/<int:bank_id>/add-to/",
         views.bank_add,
         name="bank_add",
+    ),
+    path(
+        "bank/<int:bank_id>/toggle/",
+        views.bank_question_toggle,
+        name="bank_question_toggle",
+    ),
+    path(
+        "bank/<int:bank_id>/delete/",
+        views.bank_question_delete,
+        name="bank_question_delete",
     ),
 
     # Host (teacher)

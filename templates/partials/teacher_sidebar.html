@@ -10,15 +10,14 @@
         </a>
     </div>
 
-    <a class="mx-4 mb-3 flex items-center justify-center gap-2 rounded-lg bg-[#0067c0] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#005a9e]" href="{% url 'module_create' %}">
-        <i data-lucide="folder-plus" class="h-4 w-4"></i>
-        New module
-    </a>
-
     <nav class="flex-1 space-y-1 overflow-y-auto px-3 py-2">
         <a class="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-semibold {% if request.resolver_match.url_name == 'dashboard' %}bg-[#eaf4ff] text-[#0067c0]{% else %}text-[#424242] hover:bg-[#f3f3f3]{% endif %}" href="{% url 'dashboard' %}">
             <i data-lucide="layout-dashboard" class="h-4 w-4"></i>
             Overview
+        </a>
+        <a class="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-semibold {% if request.resolver_match.url_name == 'module_list' %}bg-[#eaf4ff] text-[#0067c0]{% else %}text-[#424242] hover:bg-[#f3f3f3]{% endif %}" href="{% url 'module_list' %}">
+            <i data-lucide="folder" class="h-4 w-4"></i>
+            Your modules
         </a>
         <a class="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-semibold {% if request.resolver_match.url_name == 'teacher_history' %}bg-[#eaf4ff] text-[#0067c0]{% else %}text-[#424242] hover:bg-[#f3f3f3]{% endif %}" href="{% url 'teacher_history' %}">
             <i data-lucide="chart-column-big" class="h-4 w-4"></i>

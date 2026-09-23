@@ -34,75 +34,75 @@
                 {% endif %}
             </div>
 
-            <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                <div class="card-lift rounded-xl border border-[#e0e0e0] bg-white p-5 shadow-sm">
+            <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                <div class="card-lift rounded-xl border border-[#e0e0e0] bg-white p-4 shadow-sm">
                     <div class="flex items-center justify-between">
                         <p class="text-xs font-semibold text-[#5c5c5c]">Quizzes finished</p>
-                        <span class="grid h-9 w-9 place-items-center rounded-lg bg-[#eaf4ff] text-[#0067c0]"><i data-lucide="flag" class="h-4 w-4"></i></span>
+                        <span class="grid h-8 w-8 place-items-center rounded-lg bg-[#eaf4ff] text-[#0067c0]"><i data-lucide="flag" class="h-4 w-4"></i></span>
                     </div>
-                    <p class="mt-3 text-3xl font-semibold text-black" data-count="{{ totals.quizzes }}">0</p>
+                    <p class="mt-2 text-2xl font-semibold text-black" data-count="{{ totals.quizzes }}">0</p>
                 </div>
-                <div class="card-lift rounded-xl border border-[#e0e0e0] bg-white p-5 shadow-sm">
+                <div class="card-lift rounded-xl border border-[#e0e0e0] bg-white p-4 shadow-sm">
                     <div class="flex items-center justify-between">
                         <p class="text-xs font-semibold text-[#5c5c5c]">Total players</p>
-                        <span class="grid h-9 w-9 place-items-center rounded-lg bg-[#f0f6ff] text-[#1565c0]"><i data-lucide="users" class="h-4 w-4"></i></span>
+                        <span class="grid h-8 w-8 place-items-center rounded-lg bg-[#f0f6ff] text-[#1565c0]"><i data-lucide="users" class="h-4 w-4"></i></span>
                     </div>
-                    <p class="mt-3 text-3xl font-semibold text-black" data-count="{{ totals.players }}">0</p>
+                    <p class="mt-2 text-2xl font-semibold text-black" data-count="{{ totals.players }}">0</p>
                 </div>
-                <div class="card-lift rounded-xl border border-[#e0e0e0] bg-white p-5 shadow-sm">
+                <div class="card-lift rounded-xl border border-[#e0e0e0] bg-white p-4 shadow-sm">
                     <div class="flex items-center justify-between">
                         <p class="text-xs font-semibold text-[#5c5c5c]">Answers logged</p>
-                        <span class="grid h-9 w-9 place-items-center rounded-lg bg-[#fff7ed] text-[#c43e1c]"><i data-lucide="list-checks" class="h-4 w-4"></i></span>
+                        <span class="grid h-8 w-8 place-items-center rounded-lg bg-[#fff7ed] text-[#c43e1c]"><i data-lucide="list-checks" class="h-4 w-4"></i></span>
                     </div>
-                    <p class="mt-3 text-3xl font-semibold text-black" data-count="{{ totals.answers }}">0</p>
+                    <p class="mt-2 text-2xl font-semibold text-black" data-count="{{ totals.answers }}">0</p>
                 </div>
-                <div class="card-lift rounded-xl border border-[#e0e0e0] bg-white p-5 shadow-sm">
+                <div class="card-lift rounded-xl border border-[#e0e0e0] bg-white p-4 shadow-sm">
                     <div class="flex items-center justify-between">
                         <p class="text-xs font-semibold text-[#5c5c5c]">Overall accuracy</p>
-                        <span class="grid h-9 w-9 place-items-center rounded-lg bg-[#ecfdf3] text-[#107c41]"><i data-lucide="target" class="h-4 w-4"></i></span>
+                        <span class="grid h-8 w-8 place-items-center rounded-lg bg-[#ecfdf3] text-[#107c41]"><i data-lucide="target" class="h-4 w-4"></i></span>
                     </div>
-                    <p class="mt-3 text-3xl font-semibold text-[#107c41]" data-count="{{ totals.accuracy }}" data-suffix="%">0%</p>
+                    <p class="mt-2 text-2xl font-semibold text-[#107c41]" data-count="{{ totals.accuracy }}" data-suffix="%">0%</p>
                 </div>
             </div>
 
             {% if sessions %}
-                <div class="grid gap-6 xl:grid-cols-3">
-                    <div class="card-lift rounded-xl border border-[#e7e7e7] bg-white p-5 shadow-sm xl:col-span-2">
+                <div class="grid gap-4 xl:grid-cols-3">
+                    <div class="card-lift rounded-xl border border-[#e7e7e7] bg-white p-4 shadow-sm xl:col-span-2">
                         <h2 class="flex items-center gap-2 font-semibold text-black"><i data-lucide="trending-up" class="h-4 w-4 text-[#0067c0]"></i> Score trend</h2>
-                        <img class="mt-4 w-full" src="{{ trend_chart }}" alt="Average score per quiz over time">
+                        <img class="mt-3 w-full" src="{{ trend_chart }}" alt="Average score per quiz over time">
                     </div>
-                    <div class="card-lift grid place-items-center rounded-xl border border-[#e7e7e7] bg-white p-5 shadow-sm">
+                    <div class="card-lift grid place-items-center rounded-xl border border-[#e7e7e7] bg-white p-4 shadow-sm">
                         <h2 class="justify-self-start font-semibold text-black">Overall accuracy</h2>
-                        <img class="mt-2 w-full max-w-[220px]" src="{{ accuracy_donut }}" alt="Correct vs wrong answers">
+                        <img class="mt-2 w-full max-w-[200px]" src="{{ accuracy_donut }}" alt="Correct vs wrong answers">
                     </div>
                 </div>
-                <div class="card-lift rounded-xl border border-[#e7e7e7] bg-white p-5 shadow-sm">
+                <div class="card-lift rounded-xl border border-[#e7e7e7] bg-white p-4 shadow-sm">
                     <h2 class="flex items-center gap-2 font-semibold text-black"><i data-lucide="users" class="h-4 w-4 text-[#0067c0]"></i> Participation per quiz</h2>
-                    <img class="mt-4 w-full" src="{{ participation_chart }}" alt="Players per quiz">
+                    <img class="mt-3 w-full" src="{{ participation_chart }}" alt="Players per quiz">
                 </div>
 
                 <section class="overflow-hidden rounded-xl border border-[#e7e7e7] bg-white shadow-sm">
-                    <div class="border-b border-[#ededed] px-6 py-4">
+                    <div class="border-b border-[#ededed] px-5 py-3">
                         <h2 class="flex items-center gap-2 font-semibold text-black"><i data-lucide="calendar-check" class="h-4 w-4 text-[#0067c0]"></i> Quiz history</h2>
-                        <p class="text-sm text-[#5c5c5c]">Every finished quiz — tap a row for its score chart and PDF report.</p>
+                        <p class="text-xs text-[#5c5c5c]">Every finished quiz — tap a row for its score chart and PDF report.</p>
                     </div>
                     <ul class="divide-y divide-[#f0f0f0]">
-                        {% for s in sessions %}
-                            <li class="group px-6 py-4 hover:bg-[#fafafa]">
-                                <div class="flex flex-wrap items-center gap-x-6 gap-y-2">
-                                    <span class="rounded-md bg-[#eaf4ff] px-2.5 py-1 font-mono text-sm font-bold text-[#0067c0]">{{ s.code }}</span>
+                        {% for s in page %}
+                            <li class="group px-5 py-2.5 hover:bg-[#fafafa]">
+                                <div class="flex flex-wrap items-center gap-x-4 gap-y-1.5">
+                                    <span class="rounded bg-[#eaf4ff] px-2 py-0.5 font-mono text-xs font-bold text-[#0067c0]">{{ s.code }}</span>
                                     <div class="min-w-0">
-                                        <p class="font-semibold text-black">{{ s.module.title }}</p>
-                                        <p class="text-xs text-[#8c8c8c">{{ s.ended_at|date:"l, M j Y · H:i" }}</p>
+                                        <p class="text-sm font-semibold text-black">{{ s.module.title }}</p>
+                                        <p class="text-[11px] text-[#8c8c8c]">{{ s.ended_at|date:"M j Y · H:i" }}</p>
                                     </div>
-                                    <span class="rounded-full bg-[#ecfdf3] px-2.5 py-1 text-xs font-semibold text-[#107c41]">{{ s.num_players }} players</span>
-                                    <span class="rounded-full bg-[#fff7ed] px-2.5 py-1 text-xs font-semibold text-[#c47019]">avg {{ s.avg_score|floatformat:0 }}</span>
-                                    <div class="ml-auto flex items-center gap-2">
-                                        <button class="rounded-md border border-[#c8c8c8] bg-white px-3 py-1.5 text-xs font-semibold text-[#424242] hover:bg-[#f7f7f7]" type="button" onclick="document.getElementById('analysis-{{ s.id }}').classList.toggle('hidden'); this.querySelector('svg').classList.toggle('rotate-180')">
-                                            <i data-lucide="chevron-down" class="mr-1 inline h-3.5 w-3.5 transition-transform"></i> Analysis
+                                    <span class="rounded-full bg-[#ecfdf3] px-2 py-0.5 text-[11px] font-semibold text-[#107c41]">{{ s.num_players }} players</span>
+                                    <span class="rounded-full bg-[#fff7ed] px-2 py-0.5 text-[11px] font-semibold text-[#c47019]">avg {{ s.avg_score|floatformat:0 }}</span>
+                                    <div class="ml-auto flex items-center gap-1.5">
+                                        <button class="rounded border border-[#c8c8c8] bg-white px-2.5 py-1 text-[11px] font-semibold text-[#424242] hover:bg-[#f7f7f7]" type="button" onclick="document.getElementById('analysis-{{ s.id }}').classList.toggle('hidden'); this.querySelector('svg').classList.toggle('rotate-180')">
+                                            <i data-lucide="chevron-down" class="mr-1 inline h-3 w-3 transition-transform"></i> Analysis
                                         </button>
-                                        <a class="inline-flex items-center gap-1 rounded-md border border-[#c8c8c8] bg-white px-3 py-1.5 text-xs font-semibold text-[#0067c0] hover:bg-[#eaf4ff]" href="{% url 'session_report' s.id %}">
-                                            <i data-lucide="file-down" class="h-3.5 w-3.5"></i> PDF report
+                                        <a class="inline-flex items-center gap-1 rounded border border-[#c8c8c8] bg-white px-2.5 py-1 text-[11px] font-semibold text-[#0067c0] hover:bg-[#eaf4ff]" href="{% url 'session_report' s.id %}">
+                                            <i data-lucide="file-down" class="h-3 w-3"></i> PDF
                                         </a>
                                     </div>
                                 </div>
@@ -141,6 +141,7 @@
                             </li>
                         {% endfor %}
                     </ul>
+                    {% include "partials/pagination.html" with page=page %}
                 </section>
             {% else %}
                 <div class="rounded-xl border border-[#e7e7e7] bg-white py-16 text-center shadow-sm">

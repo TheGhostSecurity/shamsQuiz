@@ -38,7 +38,7 @@ class Module(models.Model):
         return self.title
 
     def question_count(self):
-        return self.questions.count()
+        return self.questions.filter(is_active=True).count()
 
 
 class Question(models.Model):
@@ -49,6 +49,7 @@ class Question(models.Model):
     time_limit = models.PositiveIntegerField(default=30, help_text="Seconds")
     points = models.PositiveIntegerField(default=1000)
     order = models.PositiveIntegerField(default=0)
+    is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -78,6 +79,7 @@ class BankQuestion(models.Model):
     subject = models.CharField(max_length=100, blank=True)
     time_limit = models.PositiveIntegerField(default=30, help_text="Seconds")
     points = models.PositiveIntegerField(default=1000)
+    is_active = models.BooleanField(default=True)
     added_by = models.ForeignKey(
         User,
         on_delete=models.SET_NULL,
@@ -175,15 +177,15 @@ class QuizSession(models.Model):
 
     @property
     def questions(self):
-        return list(self.module.questions.all())
+        return list(self.module.questions.filter(is_active=True))
 
     @property
     def question_count(self):
-        return self.module.questions.count()
+        return self.module.questions.filter(is_active=True).count()
 
     @property
     def current_question(self):
-        qs = list(self.module.questions.all())
+        qs = list(self.module.questions.filter(is_active=True))
         if not qs:
             return None
         if self.current_index >= len(qs):

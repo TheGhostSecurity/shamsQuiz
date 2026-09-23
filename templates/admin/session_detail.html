@@ -54,7 +54,7 @@
                     {% for p in participants %}
                         <tr class="hover:bg-[#fafafa]">
                             <td class="admin-td">
-                                <span class="grid h-7 w-7 place-items-center rounded-lg {% if forloop.counter == 1 %}bg-[#fff7ed] text-[#c47019]{% else %}bg-[#f3f3f3] text-[#5c5c5c]{% endif %} text-xs font-bold">#{{ forloop.counter }}</span>
+                                <span class="grid h-7 w-7 place-items-center rounded-lg {% if participants.start_index|add:forloop.counter0 == 1 %}bg-[#fff7ed] text-[#c47019]{% else %}bg-[#f3f3f3] text-[#5c5c5c]{% endif %} text-xs font-bold">#{{ participants.start_index|add:forloop.counter0 }}</span>
                             </td>
                             <td class="admin-td font-semibold text-black">{{ p.name }}</td>
                             <td class="admin-td text-right font-bold text-[#0067c0]">{{ p.score }}</td>
@@ -67,6 +67,7 @@
                 </tbody>
             </table>
         </div>
+        {% include "admin/_pagination.html" with page=participants %}
     </div>
 
     <div class="admin-card overflow-hidden">
@@ -107,6 +108,7 @@
                 </tbody>
             </table>
         </div>
+        {% include "admin/_pagination.html" with page=answers %}
     </div>
 </div>
 {% endblock %}

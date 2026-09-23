@@ -269,21 +269,32 @@ def session_detail(request, session_id):
     session = get_object_or_404(
         QuizSession.objects.select_related("module", "host"), pk=session_id
     )
-    participants = session.participants.order_by("-score", "joined_at")
-    answers = (
+    participants_qs = session.participants.order_by("-score", "joined_at")
+    answers_qs = (
         Answer.objects.filter(participant__session=session)
         .select_related("participant", "question", "choice")
         .order_by("-answered_at")
     )
     stats = {
-        "players": participants.count(),
-        "answered": answers.count(),
-        "correct": answers.filter(choice__is_correct=True).count(),
+        "players": participants_qs.count(),
+        "answered": answers_qs.count(),
+        "correct": answers_qs.filter(choice__is_correct=True).count(),
     }
+    participants = Paginator(participants_qs, 15).get_page(
+        request.GET.get("page", "1")
+    )
+    answers = Paginator(answers_qs, 15).get_page(
+        request.GET.get("apage", "1")
+    )
     return render(
         request,
         "admin/session_detail.html",
-        {"session": session, "participants": participants, "answers": answers, "stats": stats},
+        {
+            "session": session,
+            "participants": participants,
+            "answers": answers,
+            "stats": stats,
+        },
     )
 
 
