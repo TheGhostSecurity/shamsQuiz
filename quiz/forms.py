@@ -150,6 +150,108 @@ class QuestionForm(forms.ModelForm):
                 )
 
 
+INPUT_CLASS = "w-full rounded-md border border-[#d6d6d6] px-4 py-3 text-sm outline-none focus:border-[#0067c0] focus:ring-2 focus:ring-[#b7d8ff]"
+
+
+class ProfileForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = [
+            "first_name",
+            "last_name",
+            "email",
+            "phone",
+            "whatsapp",
+            "telegram",
+            "facebook",
+            "instagram",
+            "youtube",
+            "tiktok",
+            "website",
+        ]
+        widgets = {
+            "first_name": forms.TextInput(
+                attrs={"class": INPUT_CLASS, "placeholder": "Your first name"}
+            ),
+            "last_name": forms.TextInput(
+                attrs={"class": INPUT_CLASS, "placeholder": "Your last name"}
+            ),
+            "email": forms.EmailInput(
+                attrs={"class": INPUT_CLASS, "placeholder": "you@example.com"}
+            ),
+            "phone": forms.TextInput(
+                attrs={"class": INPUT_CLASS, "placeholder": "+255 000 000 000"}
+            ),
+            "whatsapp": forms.TextInput(
+                attrs={"class": INPUT_CLASS, "style": "padding-left: 2.75rem", "placeholder": "e.g. https://wa.me/255700000000"}
+            ),
+            "telegram": forms.TextInput(
+                attrs={"class": INPUT_CLASS, "style": "padding-left: 2.75rem", "placeholder": "e.g. https://t.me/yourname"}
+            ),
+            "facebook": forms.TextInput(
+                attrs={"class": INPUT_CLASS, "style": "padding-left: 2.75rem", "placeholder": "e.g. https://facebook.com/yourname"}
+            ),
+            "instagram": forms.TextInput(
+                attrs={"class": INPUT_CLASS, "style": "padding-left: 2.75rem", "placeholder": "e.g. https://instagram.com/yourname"}
+            ),
+            "youtube": forms.TextInput(
+                attrs={"class": INPUT_CLASS, "style": "padding-left: 2.75rem", "placeholder": "e.g. https://youtube.com/@yourname"}
+            ),
+            "tiktok": forms.TextInput(
+                attrs={"class": INPUT_CLASS, "style": "padding-left: 2.75rem", "placeholder": "e.g. https://tiktok.com/@yourname"}
+            ),
+            "website": forms.TextInput(
+                attrs={"class": INPUT_CLASS, "style": "padding-left: 2.75rem", "placeholder": "e.g. https://yourschool.ac.tz"}
+            ),
+        }
+
+    def clean_email(self):
+        email = self.cleaned_data.get("email")
+        if (
+            email
+            and User.objects.filter(email__iexact=email)
+            .exclude(pk=self.instance.pk if self.instance else None)
+            .exists()
+        ):
+            raise forms.ValidationError("That email is already used by another account.")
+        return email
+
+
+class ProfilePasswordForm(forms.Form):
+    old_password = forms.CharField(
+        label="Current password",
+        widget=forms.PasswordInput(attrs={"class": INPUT_CLASS, "autocomplete": "current-password"}),
+    )
+    new_password1 = forms.CharField(
+        label="New password",
+        widget=forms.PasswordInput(attrs={"class": INPUT_CLASS, "autocomplete": "new-password"}),
+    )
+    new_password2 = forms.CharField(
+        label="Confirm new password",
+        widget=forms.PasswordInput(attrs={"class": INPUT_CLASS, "autocomplete": "new-password"}),
+    )
+
+    def __init__(self, *args, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.user = user
+
+    def clean_old_password(self):
+        old = self.cleaned_data.get("old_password")
+        if self.user and not self.user.check_password(old):
+            raise forms.ValidationError("Your current password is incorrect.")
+        return old
+
+    def clean(self):
+        cleaned = super().clean()
+        p1 = cleaned.get("new_password1")
+        p2 = cleaned.get("new_password2")
+        if p1 and p1 != p2:
+            raise forms.ValidationError("The two password fields don't match.")
+        if p1 and self.user and self.user.check_password(p1):
+            raise forms.ValidationError("The new password must be different from your current one.")
+        return cleaned
+
+
 class JoinForm(forms.Form):
     code = forms.CharField(
         label="Quiz code",

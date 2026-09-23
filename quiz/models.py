@@ -16,6 +16,14 @@ class User(AbstractUser):
         choices=Role.choices,
         default=Role.STUDENT,
     )
+    phone = models.CharField(max_length=30, blank=True)
+    whatsapp = models.CharField(max_length=200, blank=True)
+    telegram = models.CharField(max_length=200, blank=True)
+    facebook = models.CharField(max_length=200, blank=True)
+    instagram = models.CharField(max_length=200, blank=True)
+    youtube = models.CharField(max_length=200, blank=True)
+    tiktok = models.CharField(max_length=200, blank=True)
+    website = models.CharField(max_length=200, blank=True)
 
     @property
     def is_teacher(self):
@@ -266,6 +274,8 @@ class ActivityLog(models.Model):
         REPORT_DOWNLOADED = "report_downloaded", "Report downloaded"
         BANK_ADDED = "bank_added", "Bank question imported"
         QUESTION_BANKED = "question_banked", "Question saved to bank"
+        PROFILE_UPDATED = "profile_updated", "Profile updated"
+        PASSWORD_CHANGED = "password_changed", "Password changed"
 
     actor = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name="activity_logs"

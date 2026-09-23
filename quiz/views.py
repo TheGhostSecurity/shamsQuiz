@@ -1,7 +1,7 @@
 import json
 
 from django.contrib import messages
-from django.contrib.auth import login, logout
+from django.contrib.auth import login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.db.models import Avg, Count, Q
@@ -15,6 +15,8 @@ from .forms import (
     JoinNameForm,
     LoginForm,
     ModuleForm,
+    ProfileForm,
+    ProfilePasswordForm,
     QuestionForm,
     SignUpForm,
 )
@@ -451,6 +453,38 @@ def question_to_bank(request, module_id, question_id):
 
 
 # ---------------- Live quiz: host ----------------
+
+
+@login_required
+def teacher_profile(request):
+    profile_form = ProfileForm(request.POST or None, instance=request.user)
+    password_form = ProfilePasswordForm(request.POST or None, user=request.user)
+    if request.method == "POST":
+        if "update_profile" in request.POST and profile_form.is_valid():
+            profile_form.save()
+            log_activity(
+                request.user,
+                ActivityLog.Action.PROFILE_UPDATED,
+                request.user.username,
+            )
+            messages.success(request, "Profile details saved.")
+            return redirect("profile")
+        if "change_password" in request.POST and password_form.is_valid():
+            request.user.set_password(password_form.cleaned_data["new_password1"])
+            request.user.save()
+            update_session_auth_hash(request, request.user)
+            log_activity(
+                request.user,
+                ActivityLog.Action.PASSWORD_CHANGED,
+                request.user.username,
+            )
+            messages.success(request, "Password changed.")
+            return redirect("profile")
+    return render(
+        request,
+        "quiz/teacher_profile.html",
+        {"profile_form": profile_form, "password_form": password_form},
+    )
 
 
 @login_required

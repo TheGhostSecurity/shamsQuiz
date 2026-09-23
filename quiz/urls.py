@@ -16,6 +16,7 @@ urlpatterns = [
         name="logout",
     ),
     path("dashboard/", views.dashboard, name="dashboard"),
+    path("profile/", views.teacher_profile, name="profile"),
     path("teacher/history/", views.teacher_history, name="teacher_history"),
     path(
         "teacher/history/<int:session_id>/report/",
