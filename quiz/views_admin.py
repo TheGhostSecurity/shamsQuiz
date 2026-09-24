@@ -8,7 +8,7 @@ from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
-from .models import ActivityLog, Answer, Module, Participant, Question, QuizSession
+from .models import ActivityLog, Answer, Module, Participant, Question, QuizSession, log_activity
 
 User = get_user_model()
 
