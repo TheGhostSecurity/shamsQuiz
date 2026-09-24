@@ -63,6 +63,22 @@
             transform: translateY(-2px);
             box-shadow: 0 10px 22px -12px rgba(0, 43, 63, .25);
         }
+        .sidebar-bottom {
+            position: relative;
+            background: linear-gradient(180deg, #ffffff 0%, #fffdf8 42%, #f4ead1 100%);
+        }
+        .sidebar-bottom::before {
+            position: absolute;
+            top: -1px;
+            right: 12px;
+            left: 12px;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #c8a657, transparent);
+            content: "";
+        }
+        html.dark .sidebar-bottom {
+            background: linear-gradient(180deg, #0f172a 0%, #171a20 52%, #302818 100%);
+        }
         /* Original Islamic arch and star artwork, kept local so every card has a
            quiet visual detail without adding external image requests. */
         .card-lift,
