@@ -25,6 +25,7 @@ from .models import (
     Answer,
     BankChoice,
     BankQuestion,
+    Choice,
     Module,
     Participant,
     Question,
@@ -404,8 +405,7 @@ def bank_add(request, bank_id):
     question = Question.objects.create(
         module=module,
         text=bank_q.text,
-        time_limit=bank_q.time_limit,
-        points=bank_q.points,
+        time_limit=max(10, bank_q.time_limit),
     )
     for choice in bank_q.choices.all():
         question.choices.create(
@@ -433,7 +433,6 @@ def question_to_bank(request, module_id, question_id):
         text=question.text,
         subject=module.title,
         time_limit=question.time_limit,
-        points=question.points,
         added_by=request.user,
     )
     for choice in question.choices.all():
@@ -542,7 +541,7 @@ def host_start_question(request, code):
     now = timezone.now()
     session.question_started_at = now
     session.question_ends_at = now + timezone.timedelta(
-        seconds=question.time_limit
+        seconds=max(10, question.time_limit)
     )
     session.save()
     return redirect("host_control", code=code)
@@ -573,7 +572,7 @@ def host_next_question(request, code):
     now = timezone.now()
     session.question_started_at = now
     session.question_ends_at = now + timezone.timedelta(
-        seconds=question.time_limit
+        seconds=max(10, question.time_limit)
     )
     session.save()
     return redirect("host_control", code=code)
@@ -591,21 +590,14 @@ def host_end_quiz(request, code):
             ActivityLog.Action.QUIZ_ENDED,
             f"{session.code} · {session.module.title}",
         )
-        messages.success(request, "Quiz ended. The podium is live for students.")
-    return redirect("host_results", code=code)
+        messages.success(request, "Quiz ended. The scoreboard is live for students.")
+    return redirect("scoreboard", code=code)
 
 
 @login_required
 def host_results(request, code):
     session = get_object_or_404(QuizSession, code=code, host=request.user)
-    leaderboard = sorted(
-        session.participants.all(), key=lambda p: p.score, reverse=True
-    )
-    return render(
-        request,
-        "quiz/host_results.html",
-        {"session": session, "leaderboard": leaderboard},
-    )
+    return redirect("scoreboard", code=session.code)
 
 
 def scoreboard(request, code):
@@ -708,11 +700,7 @@ def student_play(request, code):
         messages.info(request, "Join the quiz first.")
         return redirect("join")
     if session.status == QuizSession.Status.ENDED:
-        return render(
-            request,
-            "quiz/student_results.html",
-            {"session": session, "leaderboard": _leaderboard(session)},
-        )
+        return redirect("scoreboard", code=session.code)
     return render(
         request,
         "quiz/student_play.html",
@@ -762,7 +750,7 @@ def submit_answer(request, code):
     )
     limit = max(1, question.time_limit)
     speed_ratio = max(0.0, min(1.0, (limit - elapsed) / limit))
-    points = int(question.points * (0.5 + 0.5 * speed_ratio)) if choice.is_correct else 0
+    points = int(round(1000 * speed_ratio)) if choice.is_correct else 0
 
     Answer.objects.create(
         participant=participant,
@@ -829,7 +817,6 @@ def _session_json(session, host_id=None):
             "index": session.current_index,
             "text": question.text,
             "time_limit": question.time_limit,
-            "points": question.points,
             "choices": choices_data,
         }
 

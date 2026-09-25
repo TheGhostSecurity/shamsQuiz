@@ -55,7 +55,6 @@ class Question(models.Model):
     )
     text = models.TextField()
     time_limit = models.PositiveIntegerField(default=30, help_text="Seconds")
-    points = models.PositiveIntegerField(default=1000)
     order = models.PositiveIntegerField(default=0)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -72,6 +71,8 @@ class Question(models.Model):
     def save(self, *args, **kwargs):
         if self.order is None:
             self.order = 0
+        if self.time_limit is None or self.time_limit < 10:
+            self.time_limit = 10
         if not self.pk and self.order == 0:
             last = (
                 Question.objects.filter(module=self.module)
@@ -86,7 +87,6 @@ class BankQuestion(models.Model):
     text = models.TextField()
     subject = models.CharField(max_length=100, blank=True)
     time_limit = models.PositiveIntegerField(default=30, help_text="Seconds")
-    points = models.PositiveIntegerField(default=1000)
     is_active = models.BooleanField(default=True)
     added_by = models.ForeignKey(
         User,

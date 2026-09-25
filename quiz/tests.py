@@ -18,7 +18,7 @@ def make_module(teacher, n=2):
     m = Module.objects.create(title="Module X", teacher=teacher)
     for i in range(n):
         q = Question.objects.create(
-            module=m, text=f"Question {i + 1}", time_limit=60, points=1000
+            module=m, text=f"Question {i + 1}", time_limit=60
         )
         Choice.objects.create(question=q, text="Right", is_correct=True, order=1)
         Choice.objects.create(question=q, text="Wrong A", order=2)
@@ -61,7 +61,6 @@ class ModuleTests(TestCase):
             {
                 "text": "What is 2+2?",
                 "time_limit": 30,
-                "points": 1000,
                 "choice_1": "4",
                 "choice_2": "5",
                 "choice_3": "",
@@ -80,7 +79,6 @@ class ModuleTests(TestCase):
             {
                 "text": "Only one choice",
                 "time_limit": 30,
-                "points": 1000,
                 "choice_1": "A",
                 "choice_2": "",
                 "choice_3": "",
@@ -89,6 +87,23 @@ class ModuleTests(TestCase):
             },
         )
         self.assertIn("at least 2 choices", resp.content.decode().lower())
+
+    def test_question_minimum_time_enforced(self):
+        m = make_module(self.teacher)
+        resp = self.client.post(
+            reverse("question_create", args=[m.id]),
+            {
+                "text": "Too fast",
+                "time_limit": 5,
+                "choice_1": "A",
+                "choice_2": "B",
+                "choice_3": "",
+                "choice_4": "",
+                "correct_choice": "1",
+            },
+        )
+        self.assertIn("10 seconds", resp.content.decode().lower())
+        self.assertFalse(Question.objects.filter(text="Too fast").exists())
 
 
 class QuizFlowTests(TestCase):
@@ -132,9 +147,10 @@ class QuizFlowTests(TestCase):
         self.assertTrue(data["ok"])
         self.assertTrue(data["correct"])
 
-        # Fast answer should earn points
+        # Fast answer should earn points, capped at 1000
         part = Participant.objects.get(session=session, name="Amina")
         self.assertGreater(part.score, 0)
+        self.assertLessEqual(part.score, 1000)
 
         # Force time expiry -> reveal
         session.question_ends_at = timezone.now() - timedelta(seconds=1)
@@ -176,3 +192,18 @@ class QuizFlowTests(TestCase):
             reverse("submit_answer", args=[session.code]), {"choice_id": correct.id}
         )
         self.assertFalse(json.loads(resp.content)["ok"])
+
+    def test_invalid_choice_id_returns_error_not_500(self):
+        session = QuizSession.objects.create(module=self.module, host=self.teacher)
+        self.client.post(reverse("host_start_question", args=[session.code]))
+        session.refresh_from_db()
+        student = self.client.__class__()
+        student.post(reverse("join"), {"code": session.code}, follow=True)
+        student.post(
+            reverse("join_name", args=[session.code]), {"name": "Zoe"}, follow=True
+        )
+        resp = student.post(
+            reverse("submit_answer", args=[session.code]), {"choice_id": 999999}
+        )
+        data = json.loads(resp.content)
+        self.assertFalse(data["ok"])

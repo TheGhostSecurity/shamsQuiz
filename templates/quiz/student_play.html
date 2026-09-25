@@ -162,7 +162,7 @@
 
     function renderQuestion(q) {
         $('q-progress').textContent = 'Question ' + (q.index + 1) + ' / ' + totalQuestions;
-        $('q-points').textContent = q.points + ' pts';
+        $('q-points').textContent = 'up to 1000 pts';
         $('q-text').textContent = q.text;
         var box = $('q-choices');
         box.innerHTML = '';
@@ -248,16 +248,10 @@
                 stopTimerBar();
                 showPhase('phase-ended');
                 $('final-score').textContent = d.score || 0;
-                var lb = d.leaderboard || [];
-                var rank = -1;
-                for (var i = 0; i < lb.length; i++) {
-                    if (lb[i].name === myName) { rank = i; break; }
-                }
-                if (rank >= 0) {
-                    $('final-rank').textContent = '# ' + (rank + 1) + ' of ' + lb.length + ' players';
-                    document.getElementById('phase-ended').querySelector('h1').textContent =
-                        myName + (rank === 0 ? ' — you win!' : '');
-                }
+                $('final-rank').textContent = 'Final scores are on the board\u2026';
+                setTimeout(function () {
+                    window.location.href = '/scoreboard/' + code + '/';
+                }, 2200);
                 return;
             }
 

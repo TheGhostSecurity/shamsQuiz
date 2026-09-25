@@ -56,9 +56,14 @@
                     <div id="qb-D" class="flex min-h-[120px] items-center gap-4 rounded-2xl bg-[#dc2626] px-6 py-6"></div>
                 </div>
                 <aside class="rounded-2xl border border-white/10 bg-white/5 p-5">
-                    <h3 class="text-xs font-semibold uppercase tracking-wider text-white/50">Players</h3>
-                    <ul id="players" class="mt-3 grid grid-cols-1 gap-1.5 undefined sm:grid-cols-2">
-                    </ul>
+                    <div class="flex items-center justify-between gap-2">
+                        <h3 class="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-white/50">
+                            <i data-lucide="trophy" class="h-3.5 w-3.5 text-[#d99322]"></i> Live podium
+                        </h3>
+                        <span id="live-answered-pill" class="rounded-full bg-[#0078d4]/25 px-2.5 py-0.5 text-xs font-black text-[#93c5fd]">0/0</span>
+                    </div>
+                    <p id="live-podium-empty" class="mt-3 text-xs text-white/40">Waiting for players…</p>
+                    <ul id="podium" class="mt-3 hidden flex-col gap-1.5"></ul>
                 </aside>
             </div>
         </section>
@@ -84,11 +89,14 @@
                     <div id="rb-D" class="flex min-h-[120px] items-center gap-4 rounded-2xl border-2 border-white/10 bg-white/5 px-6 py-6"></div>
                 </div>
                 <aside class="rounded-2xl border border-white/10 bg-white/5 p-5">
-                    <h3 class="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-white/60">
-                        <span class="h-2 w-2 animate-pulse rounded-full bg-[#37a5ff]"></span> Players
-                    </h3>
-                    <ul id="rplayers" class="mt-3 grid grid-cols-1 gap-1.5 sm:grid-cols-2">
-                    </ul>
+                    <div class="flex items-center justify-between gap-2">
+                        <h3 class="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-white/60">
+                            <span class="h-2 w-2 animate-pulse rounded-full bg-[#37a5ff]"></span> Live podium
+                        </h3>
+                        <span id="reveal-answered-pill" class="rounded-full bg-[#0078d4]/25 px-2.5 py-0.5 text-xs font-black text-[#93c5fd]">0/0</span>
+                    </div>
+                    <p id="reveal-podium-empty" class="mt-3 text-xs text-white/40">Waiting for players…</p>
+                    <ul id="rpodium" class="mt-3 hidden flex-col gap-1.5"></ul>
                 </aside>
             </div>
             <div class="mt-8 grid grid-cols-1 justify-items-stretch gap-3 sm:grid-cols-2">
@@ -102,8 +110,8 @@
                 {% else %}
                 <div></div>
                 {% endif %}
-                <a class="inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-7 py-3 text-base font-black text-[#002b3f] hover:bg-white/90" href="{% url 'host_results' session.code %}">
-                    <i data-lucide="trophy" class="h-4 w-4"></i> Show results
+                <a class="inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-7 py-3 text-base font-black text-[#002b3f] hover:bg-white/90" href="{% url 'scoreboard' session.code %}">
+                    <i data-lucide="trophy" class="h-4 w-4"></i> Live scoreboard
                 </a>
             </div>
         </section>
@@ -117,7 +125,7 @@
     var code = "{{ session.code }}";
     var state = null;
     var params = null;
-    var pts = {% if session.current_question %}{{ session.current_question.points }}{% else %}0{% endif %};
+    var pts = 1000;
 
     function letter(i) { return String.fromCharCode(65 + i); }
 
@@ -149,38 +157,38 @@
         return d.innerHTML;
     }
 
-    function renderPlayers(list) {
-        var el = document.getElementById('players');
+    function renderPodium(elId, emptyId, list) {
+        var el = document.getElementById(elId);
+        var empty = document.getElementById(emptyId);
         el.innerHTML = '';
-        list.forEach(function (p) {
+        if (!list || !list.length) {
+            el.classList.add('hidden');
+            if (empty) empty.classList.remove('hidden');
+            return;
+        }
+        empty.classList.add('hidden');
+        el.classList.remove('hidden');
+        var top = list.slice().sort(function (a, b) { return b.score - a.score; }).slice(0, 5);
+        var leader = Math.max(1, top[0].score);
+        top.forEach(function (p, i) {
+            var rank = i + 1;
+            var medal = rank === 1 ? 'bg-[#f6c453] text-black'
+                : rank === 2 ? 'bg-[#c8ccd4] text-black'
+                : rank === 3 ? 'bg-[#d08a5a] text-black'
+                : 'bg-white/10 text-white/70';
+            var bar = rank === 1 ? 'bg-[#f6c453]' : 'bg-[#37a5ff]';
             var li = document.createElement('li');
-            li.className = 'flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm';
-            li.innerHTML = '<span class="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-[#0067c0] text-xs font-bold">' +
-                (p.name.slice(0, 2).toUpperCase()) + '</span>' +
-                '<span class="truncate font-semibold">' + escapeHtml(p.name) + '</span>' +
-                '<span class="ml-auto">' + (p.has_answered
-                    ? '<span class="grid h-5 w-5 place-items-center rounded-full bg-[#107c41]"><i data-lucide="check" class="h-3 w-3 text-white"></i></span>'
-                    : '<span class="grid h-5 w-5 place-items-center rounded-full bg-white/10"><i data-lucide="minus" class="h-3 w-3 text-white/50"></i></span>') + '</span>';
+            li.className = 'flex items-center gap-2.5 rounded-xl border border-white/10 bg-white/5 px-3 py-2';
+            li.innerHTML =
+                '<span class="grid h-7 w-7 shrink-0 place-items-center rounded-full text-xs font-black ' + medal + '">' + rank + '</span>' +
+                '<span class="min-w-0 flex-1">' +
+                '<span class="block truncate text-xs font-bold">' + escapeHtml(p.name) + '</span>' +
+                '<span class="mt-1 block h-1.5 overflow-hidden rounded-full bg-white/10">' +
+                '<span class="block h-full rounded-full ' + bar + '" style="width:' + Math.round(p.score / leader * 100) + '%"></span></span>' +
+                '</span>' +
+                '<span class="shrink-0 text-sm font-black text-[#d99322]">' + p.score + '</span>';
             el.appendChild(li);
         });
-        if (window.lucide) window.lucide.createIcons();
-    }
-
-    function renderRevealPlayers(list) {
-        var el = document.getElementById('rplayers');
-        el.innerHTML = '';
-        list.forEach(function (p) {
-            var li = document.createElement('li');
-            li.className = 'flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm';
-            li.innerHTML = '<span class="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-[#0067c0] text-xs font-bold">' +
-                (p.name.slice(0, 2).toUpperCase()) + '</span>' +
-                '<span class="truncate font-semibold">' + escapeHtml(p.name) + '</span>' +
-                '<span class="ml-auto">' + (p.has_answered
-                    ? '<i data-lucide="check-circle" class="h-4 w-4 text-[#107c41]"></i>'
-                    : '<i data-lucide="minus-circle" class="h-4 w-4 text-white/30"></i>') + '</span>';
-            el.appendChild(li);
-        });
-        if (window.lucide) window.lucide.createIcons();
     }
 
     function show(id) {
@@ -195,13 +203,12 @@
             show('waiting-view');
             var pill = document.getElementById('answered-pill');
             pill.textContent = (state.answered_count || 0) + '/' + (state.participants ? state.participants.length : 0);
-            renderPlayers(state.participants || []);
         } else if (state.status === 'question') {
             show('live-view');
             document.getElementById('q-text').textContent = state.question.text;
             document.getElementById('q-ends').textContent = 'ends in ~' + state.seconds_remaining + 's';
             document.getElementById('q-ends').classList.toggle('hidden', false);
-            renderPlayers(state.participants || []);
+            renderPodium('podium', 'live-podium-empty', state.participants || []);
             if (JSON.stringify(state.question.choices) !== JSON.stringify(params)) {
                 params = state.question.choices;
                 apply('qb-', params);
@@ -211,9 +218,7 @@
                 });
             }
             var answered = (state.participants || []).filter(function (p) { return p.has_answered; }).length;
-            var p2 = document.getElementById('answered-pill');
-            p2.textContent = answered + '/' + state.participants.length;
-            p2.classList.add('inline-block');
+            document.getElementById('live-answered-pill').textContent = answered + '/' + state.participants.length;
         } else if (state.status === 'reveal') {
             show('reveal-view');
             document.getElementById('rq-text').textContent = state.question.text;
@@ -226,9 +231,11 @@
             document.getElementById('r-answer-text').textContent = correctText;
             document.getElementById('r-points').textContent = correctLetter + ' \u00b7 ' + pts + ' pts';
             applyReveal('rb-', state.question.choices, correctIdx);
-            renderRevealPlayers(state.participants || []);
+            renderPodium('rpodium', 'reveal-podium-empty', state.participants || []);
+            var revAnswered = (state.participants || []).filter(function (p) { return p.has_answered; }).length;
+            document.getElementById('reveal-answered-pill').textContent = revAnswered + '/' + state.participants.length;
         } else if (state.status === 'ended') {
-            window.location.href = '/host/' + code + '/results/';
+            window.location.href = '/scoreboard/' + code + '/';
         }
     }
 

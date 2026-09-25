@@ -84,7 +84,7 @@ class QuestionForm(forms.ModelForm):
 
     class Meta:
         model = Question
-        fields = ["text", "time_limit", "points"]
+        fields = ["text", "time_limit"]
         widgets = {
             "text": forms.Textarea(
                 attrs={
@@ -96,14 +96,8 @@ class QuestionForm(forms.ModelForm):
             "time_limit": forms.NumberInput(
                 attrs={
                     "class": "w-full rounded-md border border-[#d6d6d6] px-4 py-3 text-sm outline-none focus:border-[#0067c0] focus:ring-2 focus:ring-[#b7d8ff]",
-                    "min": 5,
+                    "min": 10,
                     "max": 300,
-                }
-            ),
-            "points": forms.NumberInput(
-                attrs={
-                    "class": "w-full rounded-md border border-[#d6d6d6] px-4 py-3 text-sm outline-none focus:border-[#0067c0] focus:ring-2 focus:ring-[#b7d8ff]",
-                    "min": 0,
                 }
             ),
         }
@@ -123,6 +117,14 @@ class QuestionForm(forms.ModelForm):
                     self.fields["correct_choice"].initial = str(idx + 1)
         for name in ["choice_1", "choice_2", "choice_3", "choice_4"]:
             self.fields[name].widget.attrs.update({"class": self.CHOICE_CLASS})
+
+    def clean_time_limit(self):
+        value = self.cleaned_data.get("time_limit")
+        if value is not None and value < 10:
+            raise forms.ValidationError(
+                "Minimum time per question is 10 seconds."
+            )
+        return value
 
     def clean(self):
         cleaned = super().clean()
