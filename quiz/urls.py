@@ -24,6 +24,11 @@ urlpatterns = [
         name="session_report",
     ),
     path(
+        "teacher/history/<int:session_id>/export/",
+        views.session_export_csv,
+        name="session_export_csv",
+    ),
+    path(
         "teacher/history/<int:session_id>/chart/",
         views.session_chart,
         name="session_chart",
@@ -46,6 +51,31 @@ urlpatterns = [
         "modules/<int:module_id>/delete/",
         views.module_delete,
         name="module_delete",
+    ),
+    path(
+        "modules/<int:module_id>/duplicate/",
+        views.module_duplicate,
+        name="module_duplicate",
+    ),
+    path(
+        "modules/<int:module_id>/export/",
+        views.module_export_csv,
+        name="module_export_csv",
+    ),
+    path(
+        "modules/<int:module_id>/import/",
+        views.module_import_csv,
+        name="module_import_csv",
+    ),
+    path(
+        "modules/<int:module_id>/practice/enable/",
+        views.practice_enable,
+        name="practice_enable",
+    ),
+    path(
+        "modules/<int:module_id>/practice/disable/",
+        views.practice_disable,
+        name="practice_disable",
     ),
 
     # Teacher: questions
@@ -114,12 +144,28 @@ urlpatterns = [
     ),
     path("host/<str:code>/end/", views.host_end_quiz, name="host_end_quiz"),
     path("host/<str:code>/results/", views.host_results, name="host_results"),
+    path("host/<str:code>/pause/", views.host_pause, name="host_pause"),
+    path("host/<str:code>/resume/", views.host_resume, name="host_resume"),
+    path("host/<str:code>/add-time/", views.host_add_time, name="host_add_time"),
     path("scoreboard/<str:code>/", views.scoreboard, name="scoreboard"),
 
     # Student
     path("join/", views.join, name="join"),
     path("join/<str:code>/", views.join_name, name="join_name"),
     path("play/<str:code>/", views.student_play, name="student_play"),
+
+    # Practice / revision mode
+    path("practice/", views.practice, name="practice"),
+    path(
+        "practice/<str:code>/",
+        views.practice_play,
+        name="practice_play",
+    ),
+    path(
+        "api/practice/<str:code>/",
+        views.practice_data,
+        name="practice_data",
+    ),
 
     # API
     path("api/quiz/<str:code>/state/", views.quiz_state, name="quiz_state"),

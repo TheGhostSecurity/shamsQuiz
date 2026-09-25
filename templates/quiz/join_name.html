@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load quiztags %}
 
 {% block title %}Enter your name · ShamsQuiz{% endblock %}
 {% block body_class %}bg-[#001f2e] text-white antialiased{% endblock %}
@@ -17,14 +18,14 @@
     <main class="flex flex-1 items-center justify-center px-4 py-8 pb-[calc(env(safe-area-inset-bottom)+2rem)]">
         <div class="w-full max-w-md">
             <div class="rounded-3xl border border-[#0078d4]/30 bg-gradient-to-b from-[#0078d4]/15 to-transparent p-6 text-center sm:p-8">
-                <p class="text-sm font-bold uppercase tracking-widest text-[#93c5fd]">Joining</p>
+                <p class="text-sm font-bold uppercase tracking-widest text-[#93c5fd]">{% t "Joining" %}</p>
                 <p class="mt-2 text-3xl font-black tracking-[0.25em]">{{ session.code }}</p>
                 <p class="mt-2 text-sm text-white/60">{{ session.module.title }}</p>
             </div>
 
             <form class="mt-6" method="post">
                 {% csrf_token %}
-                <label class="mb-1 block text-sm font-semibold text-white/70" for="id_name">Your name</label>
+                <label class="mb-1 block text-sm font-semibold text-white/70" for="id_name">{% t "Your name" %}</label>
                 <input id="id_name" name="name" required maxlength="40" autocomplete="off" placeholder="Aisha"
                        class="w-full rounded-2xl border border-white/15 bg-white/10 px-5 py-4 text-lg font-bold text-white outline-none focus:border-[#54b6ff] focus:ring-2 focus:ring-[#0078d4]/40">
                 {% for error in form.name.errors %}
@@ -33,11 +34,45 @@
                 {% for message in messages %}
                     <p class="mt-2 rounded-lg bg-[#dc2626]/20 px-3 py-2 text-sm font-semibold text-red-400">{{ message }}</p>
                 {% endfor %}
+                {% if session.teams_enabled %}
+                <label class="mb-1 mt-5 block text-sm font-semibold text-white/70" for="id_team">{% t "Pick your team" %}</label>
+                <div class="grid grid-cols-4 gap-2" id="team-picker">
+                    {% for value, label in form.team.field.choices %}
+                    <button type="button" data-team="{{ value }}"
+                            class="team-btn rounded-xl border-2 border-white/15 bg-white/10 px-1 py-2.5 text-xs font-bold text-white/80 transition hover:bg-white/20">
+                        <span class="mx-auto mb-1 block h-3 w-3 rounded-full" style="background:{% if value == 'red' %}#dc2626{% elif value == 'blue' %}#37a5ff{% elif value == 'yellow' %}#f5bd5e{% else %}#34d399{% endif %}"></span>
+                        {{ label }}
+                    </button>
+                    {% endfor %}
+                    <input type="hidden" name="team" id="id_team" value="">
+                </div>
+                {% endif %}
                 <button class="mt-5 w-full rounded-2xl bg-[#0078d4] py-4 text-base font-black text-white shadow-xl shadow-[#0078d4]/40 transition hover:-translate-y-0.5 hover:bg-[#37a5ff]" type="submit">
-                    Join the game
+                    {% t "Join the game" %}
                 </button>
             </form>
         </div>
     </main>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+    var picker = document.getElementById('team-picker');
+    if (!picker) return;
+    var input = document.getElementById('id_team');
+    picker.querySelectorAll('.team-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            picker.querySelectorAll('.team-btn').forEach(function (b) {
+                b.classList.remove('border-[#54b6ff]', 'bg-white/20', 'text-white');
+                b.classList.add('border-white/15', 'text-white/80');
+            });
+            btn.classList.remove('border-white/15', 'text-white/80');
+            btn.classList.add('border-[#54b6ff]', 'bg-white/20', 'text-white');
+            input.value = btn.getAttribute('data-team');
+        });
+    });
+})();
+</script>
 {% endblock %}

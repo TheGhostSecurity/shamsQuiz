@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 
-from .models import Choice, Module, Question, QuizSession, User
+from .models import Choice, Module, Participant, Question, QuizSession, User
 
 
 class SignUpForm(UserCreationForm):
@@ -291,3 +291,17 @@ class JoinNameForm(forms.Form):
             }
         ),
     )
+    team = forms.ChoiceField(
+        choices=Participant.Team.choices,
+        required=False,
+        initial="",
+        label="Pick your team",
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["team"].widget.attrs.update(
+            {
+                "class": "w-full rounded-md border border-[#d6d6d6] bg-white px-4 py-3 text-sm outline-none focus:border-[#0067c0] focus:ring-2 focus:ring-[#b7d8ff]"
+            }
+        )

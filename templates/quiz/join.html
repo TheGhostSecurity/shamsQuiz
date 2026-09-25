@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load quiztags %}
 
 {% block title %}Join a quiz · ShamsQuiz{% endblock %}
 {% block body_class %}bg-[#001f2e] text-white antialiased{% endblock %}
@@ -19,8 +20,8 @@
             <span class="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-[#0078d4] text-white">
                 <i data-lucide="log-in" class="h-7 w-7"></i>
             </span>
-            <h1 class="mt-5 text-3xl font-black">Enter the code</h1>
-            <p class="mt-2 text-white/60">Your teacher will give you a 6-character code to join the quiz.</p>
+            <h1 class="mt-5 text-3xl font-black">{% t "Join a live quiz" %}</h1>
+            <p class="mt-2 text-white/60">{% t "Your teacher will give you a 6-character code to join the quiz." %}</p>
 
             <form class="mt-8" method="post" action="{% url 'join' %}">
                 {% csrf_token %}
@@ -37,10 +38,10 @@
                         {% endfor %}
                     </div>
                 {% endif %}
-                <button class="mt-6 w-full rounded-2xl bg-[#0078d4] py-4 text-base font-black text-white shadow-xl shadow-[#0078d4]/40 transition hover:-translate-y-0.5 hover:bg-[#37a5ff]" type="submit">Join</button>
+                <button class="mt-6 w-full rounded-2xl bg-[#0078d4] py-4 text-base font-black text-white shadow-xl shadow-[#0078d4]/40 transition hover:-translate-y-0.5 hover:bg-[#37a5ff]" type="submit">{% t "Join" %}</button>
             </form>
 
-            <p class="mt-6 text-center text-sm text-white/50">Tip: the code is 6 letters/numbers, e.g. <span class="font-black text-[#93c5fd]">ABC123</span></p>
+            <p class="mt-6 text-center text-sm text-white/50">{% t "Tip: the code is 6 letters/numbers, e.g." %} <span class="font-black text-[#93c5fd]">ABC123</span></p>
         </div>
     </main>
 </div>

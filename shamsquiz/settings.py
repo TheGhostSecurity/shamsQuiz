@@ -60,10 +60,12 @@ TEMPLATES = [
         'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
-            'context_processors': [
+'context_processors': [
+                'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'quiz.i18n.lang_context',
             ],
         },
     },
@@ -79,6 +81,10 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
+        'OPTIONS': {
+            'init_command': 'PRAGMA journal_mode=WAL; PRAGMA busy_timeout=5000;',
+            'timeout': 20,
+        },
     }
 }
 

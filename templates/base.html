@@ -1,3 +1,4 @@
+{% load static %}
 <!doctype html>
 <html lang="en">
 <head>
@@ -234,6 +235,61 @@
     <main class="{% block main_class %}mx-auto max-w-6xl px-4 py-8{% endblock %}">
         {% block content %}{% endblock %}
     </main>
+
+    <div class="fixed bottom-4 right-4 z-50 flex items-center gap-2">
+        <div class="flex items-center gap-1 rounded-full border border-[#d6d6d6] bg-white px-1.5 py-1 text-xs font-semibold text-[#002b3f] shadow-sm">
+            <button type="button" id="lang-en" class="rounded-full px-2.5 py-1 transition hover:bg-[#eaf4ff]"
+                onclick="setLang('en')" aria-label="English">EN</button>
+            <button type="button" id="lang-sw" class="rounded-full px-2.5 py-1 transition hover:bg-[#eaf4ff]"
+                onclick="setLang('sw')" aria-label="Kiswahili">SW</button>
+        </div>
+        <button type="button" id="mute-toggle" title="Toggle sound"
+            class="rounded-full border border-[#d6d6d6] bg-white p-2 shadow-sm text-[#002b3f]"
+            onclick="toggleMute()" aria-label="Toggle sound">
+            <span id="mute-on"><i data-lucide="volume-2" class="h-4 w-4"></i></span>
+            <span id="mute-off" class="hidden"><i data-lucide="volume-x" class="h-4 w-4"></i></span>
+        </button>
+    </div>
+
+    <script src="{% static 'quiz/js/fx.js' %}"></script>
+    <script>
+        function getLang() {
+            var m = document.cookie.match(new RegExp('(^|; )shamsLang=([^;]*)'));
+            return m ? decodeURIComponent(m[2]) : 'en';
+        }
+        function setLang(l) {
+            document.cookie = 'shamsLang=' + l + '; path=/; max-age=31536000; SameSite=Lax';
+            window.location.reload();
+        }
+        function renderLang() {
+            var l = getLang();
+            var en = document.getElementById('lang-en');
+            var sw = document.getElementById('lang-sw');
+            var on = l === 'sw';
+            if (ce(en)) en.classList.toggle('bg-[#0067c0]', on && false);
+            if (on) { en.classList.remove('bg-[#eaf4ff]'); sw.classList.add('bg-[#eaf4ff]'); }
+            else { sw.classList.remove('bg-[#eaf4ff]'); en.classList.add('bg-[#eaf4ff]'); }
+        }
+        function ce(el) { return el && el.id === 'lang-en'; }
+        function toggleMute() {
+            if (!window.FX) return;
+            var m = window.FX.toggleMute();
+            document.getElementById('mute-on').classList.toggle('hidden', m);
+            document.getElementById('mute-off').classList.toggle('hidden', !m);
+        }
+        function renderMute() {
+            if (!window.FX) return;
+            var m = window.FX.isMuted();
+            var on = document.getElementById('mute-on');
+            var off = document.getElementById('mute-off');
+            if (on) on.classList.toggle('hidden', m);
+            if (off) off.classList.toggle('hidden', !m);
+        }
+        document.addEventListener('DOMContentLoaded', function () {
+            renderLang();
+            renderMute();
+        });
+    </script>
 
     <script>
         function getCookie(name) {

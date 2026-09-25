@@ -98,6 +98,16 @@ def _table(data, col_widths=None, aligns=None):
     return t
 
 
+def _breakdown_style():
+    return ParagraphStyle(
+        "Breakdown",
+        fontName="Helvetica",
+        fontSize=7.5,
+        leading=10,
+        textColor=colors.HexColor("#1f1f1f"),
+    )
+
+
 def build_session_report(session, leaderboard):
     answers = list(
         Answer.objects.filter(participant__session=session)
@@ -211,25 +221,34 @@ def build_session_report(session, leaderboard):
     story.append(Paragraph("Question performance", _section()))
     questions = list(session.module.questions.all())
     if questions and answers:
-        q_data = [["#", "Question", "Correct", "Wrong", "Books"]]
+        q_data = [["#", "Question", "Answer breakdown", "Correct", "Wrong", "Picks"]]
         for i, q in enumerate(questions, start=1):
             q_answers = [a for a in answers if a.question_id == q.id]
             q_correct = sum(1 for a in q_answers if a.choice.is_correct)
             q_wrong = len(q_answers) - q_correct
+            lines = []
+            for j, choice in enumerate(q.choices.all()):
+                picked = sum(1 for a in q_answers if a.choice_id == choice.id)
+                mark = " <b><font color='#107c41'>&#10003;</font></b>" if choice.is_correct else ""
+                lines.append(
+                    f"{chr(65 + j)}. {choice.text}{mark} &mdash; {picked} pick(s)"
+                )
+            breakdown = Paragraph("<br/>".join(lines) or "—", _breakdown_style())
             q_data.append(
                 [
                     str(i),
                     q.text,
-                    str(q_correct),
-                    str(q_wrong),
-                    str(len(q_answers)),
+                    breakdown,
+                    str(q_correct) if q_answers else "—",
+                    str(q_wrong) if q_answers else "—",
+                    str(len(q_answers)) if q_answers else "—",
                 ]
             )
         story.append(
             _table(
                 q_data,
-                col_widths=[10 * mm, 100 * mm, 20 * mm, 20 * mm, 16 * mm],
-                aligns={2: "CENTER", 3: "CENTER", 4: "CENTER"},
+                col_widths=[8 * mm, 54 * mm, 62 * mm, 16 * mm, 16 * mm, 18 * mm],
+                aligns={3: "CENTER", 4: "CENTER", 5: "CENTER"},
             )
         )
     else:

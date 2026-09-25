@@ -36,6 +36,9 @@ class Module(models.Model):
     teacher = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name="modules"
     )
+    practice_code = models.CharField(
+        max_length=6, blank=True, editable=False
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -47,6 +50,15 @@ class Module(models.Model):
 
     def question_count(self):
         return self.questions.filter(is_active=True).count()
+
+    @staticmethod
+    def generate_practice_code():
+        while True:
+            code = "".join(
+                random.choices(string.ascii_uppercase + string.digits, k=6)
+            )
+            if not Module.objects.filter(practice_code=code).exists():
+                return code
 
 
 class Question(models.Model):
@@ -162,6 +174,8 @@ class QuizSession(models.Model):
     current_index = models.PositiveIntegerField(default=0)
     question_started_at = models.DateTimeField(null=True, blank=True)
     question_ends_at = models.DateTimeField(null=True, blank=True)
+    question_pause_remaining = models.PositiveIntegerField(default=0)
+    teams_enabled = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     ended_at = models.DateTimeField(null=True, blank=True)
 
@@ -208,6 +222,40 @@ class QuizSession(models.Model):
             and now < self.question_ends_at
         )
 
+    @property
+    def is_paused(self):
+        return (
+            self.status == self.Status.QUESTION
+            and self.question_ends_at is None
+            and self.question_pause_remaining > 0
+        )
+
+    def pause(self):
+        if self.status != self.Status.QUESTION or self.question_ends_at is None:
+            return
+        self.question_pause_remaining = max(
+            0, int((self.question_ends_at - timezone.now()).total_seconds())
+        )
+        self.question_ends_at = None
+        self.save(update_fields=["question_ends_at", "question_pause_remaining"])
+
+    def resume(self):
+        if not self.is_paused:
+            return
+        self.question_ends_at = timezone.now() + timezone.timedelta(
+            seconds=self.question_pause_remaining
+        )
+        self.question_pause_remaining = 0
+        self.save(update_fields=["question_ends_at", "question_pause_remaining"])
+
+    def add_time(self, seconds=15):
+        if self.status != self.Status.QUESTION or self.question_ends_at is None:
+            return
+        self.question_ends_at = self.question_ends_at + timezone.timedelta(
+            seconds=seconds
+        )
+        self.save(update_fields=["question_ends_at"])
+
     def seconds_remaining(self):
         now = timezone.now()
         if self.question_ends_at is None:
@@ -216,10 +264,19 @@ class QuizSession(models.Model):
 
 
 class Participant(models.Model):
+    class Team(models.TextChoices):
+        RED = "red", "Red"
+        BLUE = "blue", "Blue"
+        YELLOW = "yellow", "Yellow"
+        GREEN = "green", "Green"
+
     session = models.ForeignKey(
         QuizSession, on_delete=models.CASCADE, related_name="participants"
     )
     name = models.CharField(max_length=100)
+    team = models.CharField(
+        max_length=10, choices=Team.choices, blank=True, default=""
+    )
     score = models.IntegerField(default=0)
     joined_at = models.DateTimeField(auto_now_add=True)
 

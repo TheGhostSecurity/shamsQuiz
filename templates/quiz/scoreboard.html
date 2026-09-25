@@ -38,6 +38,23 @@
                 <h1 class="mt-1 text-2xl font-black sm:text-3xl">Scoreboard</h1>
             </div>
 
+            {% if team_totals %}
+            <div class="mt-6 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                {% for team in team_totals %}
+                <div class="rounded-xl border border-white/10 bg-white/5 px-3 py-3 text-center">
+                    <p class="text-xs font-black uppercase tracking-wider" style="color:{% if team.key == 'red' %}#f87171{% elif team.key == 'blue' %}#7cc0ff{% elif team.key == 'yellow' %}#f5bd5e{% else %}#34d399{% endif %}">
+                        {{ team.label }}
+                    </p>
+                    <p class="mt-1 text-xl font-black text-[#f2ce83]">{{ team.score }}</p>
+                    <p class="text-[10px] text-white/50">{{ team.members }} player{{ team.members|pluralize }}</p>
+                    <div class="mt-1.5 h-1 w-full overflow-hidden rounded-full bg-white/10">
+                        <span class="block h-full rounded-full" style="width:{{ team.pct }}%;background:{% if team.key == 'red' %}#dc2626{% elif team.key == 'blue' %}#37a5ff{% elif team.key == 'yellow' %}#f5bd5e{% else %}#34d399{% endif %}"></span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
             <div class="mt-6 flex items-end justify-center gap-3 sm:gap-5">
                 {% for row in rows %}
                     {% if forloop.counter == 2 %}
@@ -52,7 +69,7 @@
                         <div class="flex w-28 flex-col items-center sm:w-36">
                             <span class="text-shadow mb-1 inline-flex items-center gap-1 rounded-full bg-[#d99322] px-3 py-1 text-[10px] font-black uppercase tracking-widest text-white shadow-lg">Champion</span>
                             <span class="grid h-20 w-20 place-items-center rounded-full bg-gradient-to-br from-[#f2ce83] to-[#d99322] text-3xl font-black text-white shadow-xl sm:h-24 sm:w-24">{{ row.participant.name|slice:":1"|upper }}</span>
-                            <p class="mt-2 max-w-full truncate text-center text-sm font-bold sm:text-base">{{ row.participant.name }}</p>
+                            <p class="mt-2 max-w-full truncate text-center text-sm font-bold sm:text-base">{{ row.participant.name }}{% if row.team %}<span class="team-dot ml-1 inline-block h-2 w-2 rounded-full align-middle" data-team="{{ row.team }}"></span>{% endif %}</p>
                             <p class="text-2xl font-black text-[#f2ce83]">{{ row.score }}</p>
                             <span class="mt-1 inline-flex items-center gap-1 rounded-full bg-[#d99322] px-2 py-0.5 text-[10px] font-black text-white"><i data-lucide="crown" class="h-3 w-3"></i> 1</span>
                         </div>
@@ -76,6 +93,7 @@
                             <div class="min-w-0 flex-1">
                                 <p class="truncate text-sm font-bold">
                                     {{ row.participant.name }}
+                                    {% if row.team %}<span class="team-dot ml-1 inline-block h-2 w-2 rounded-full align-middle" data-team="{{ row.team }}"></span>{% endif %}
                                     {% if row.participant.id == my_id %}<span class="ml-1 rounded-full bg-[#37a5ff] px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-white">You</span>{% endif %}
                                 </p>
                                 <div class="mt-1 flex items-center gap-1.5">
@@ -145,6 +163,15 @@
             bar.style.background = 'linear-gradient(90deg, #37a5ff, #9be8c0)';
         }, 200 + i * 90);
     });
+    var teamColors = { red: '#dc2626', blue: '#37a5ff', yellow: '#f5bd5e', green: '#34d399' };
+    document.querySelectorAll('.team-dot').forEach(function (el) {
+        var c = teamColors[el.getAttribute('data-team')];
+        if (c) el.style.background = c;
+    });
+    if (window.FX && document.querySelector('.sb-bar')) {
+        window.FX.confetti();
+        window.FX.fanfare();
+    }
 })();
 </script>
 {% endblock %}

@@ -13,7 +13,10 @@
                 <i data-lucide="sun" class="h-4 w-4"></i>
             </span>
             <div class="min-w-0">
-                <p class="truncate text-sm font-bold">{{ session.module.title }}</p>
+                <p class="truncate text-sm font-bold">
+                    {{ session.module.title }}
+                    {% if participant.team %}<span class="ml-1 inline-block h-2 w-2 rounded-full align-middle team-dot" data-team="{{ participant.team }}"></span>{% endif %}
+                </p>
                 <p class="text-[11px] text-white/50">{{ session.code }}</p>
             </div>
         </div>
@@ -60,6 +63,18 @@
             <p class="mt-2 text-white/60">Waiting for everyone else to answer&hellip;</p>
             <div class="mx-auto mt-6 h-2 w-48 overflow-hidden rounded-full bg-white/10">
                 <div class="progress-bar h-full rounded-full bg-[#37a5ff]" style="width:0%"></div>
+            </div>
+        </div>
+
+        <!-- PAUSED -->
+        <div id="phase-paused" class="hidden w-full max-w-xl text-center">
+            <span class="mx-auto grid h-16 w-16 place-items-center rounded-full bg-[#d99322] text-white">
+                <i data-lucide="pause" class="h-8 w-8"></i>
+            </span>
+            <h1 class="mt-5 text-3xl font-black">Paused</h1>
+            <p class="mt-2 text-white/60">The teacher paused this question. Sit tight &mdash; it resumes shortly.</p>
+            <div class="mx-auto mt-6 h-2 w-48 overflow-hidden rounded-full bg-white/10">
+                <div class="h-full rounded-full bg-[#d99322]/60" style="width:100%"></div>
             </div>
         </div>
 
@@ -117,10 +132,12 @@
     var POLL = 700;
     var currentEndsAt = null;
     var locked = false;
+    var lastTickSec = -1;
+    var teamColors = { red: '#dc2626', blue: '#37a5ff', yellow: '#f5bd5e', green: '#34d399' };
 
     function $(id) { return document.getElementById(id); }
     function showPhase(id) {
-        ['phase-waiting', 'phase-question', 'phase-answered', 'phase-reveal', 'phase-ended'].forEach(function (p) {
+        ['phase-waiting', 'phase-question', 'phase-answered', 'phase-paused', 'phase-reveal', 'phase-ended'].forEach(function (p) {
             $(p).classList.add('hidden');
         });
         $(id).classList.remove('hidden');
@@ -131,6 +148,10 @@
             var left = Math.max(0, Math.ceil((currentEndsAt - Date.now()) / 1000));
             var t = $('q-timer');
             if (t) t.textContent = left;
+            if (left <= 3 && left > 0 && left !== lastTickSec && window.FX) {
+                lastTickSec = left;
+                window.FX.tick();
+            }
         }
     }
     setInterval(tick, 250);
@@ -182,6 +203,7 @@
     function submitAnswer(choiceId) {
         if (locked) return;
         locked = true;
+        if (window.FX) window.FX.click();
         showPhase('phase-answered');
         postJSON('/api/quiz/' + code + '/answer/', { choice_id: choiceId })
             .then(function (r) {
@@ -215,12 +237,14 @@
         var iconEl = $('r-result').querySelector('i');
         var label = $('r-label');
         if (myAnswer && myAnswer.correct) {
+            if (window.FX) window.FX.correct();
             iconEl.setAttribute('data-lucide', 'party-popper');
             $('r-result').classList.remove('text-white/60');
             $('r-result').classList.add('text-white');
             label.textContent = 'Correct!';
             $('r-points-badge').textContent = '+' + myAnswer.points;
         } else if (myAnswer) {
+            if (window.FX) window.FX.buzz();
             iconEl.setAttribute('data-lucide', 'frown');
             $('r-result').classList.remove('text-white/60');
             $('r-result').classList.add('text-white');
@@ -272,6 +296,13 @@
                 return;
             }
 
+            if (d.paused) {
+                stopTimerBar();
+                currentEndsAt = null;
+                showPhase('phase-paused');
+                return;
+            }
+
             // status === 'question'
             showPhase(d.my_answer ? 'phase-answered' : 'phase-question');
             if (d.my_answer) {
@@ -289,6 +320,11 @@
 
     setInterval(poll, POLL);
     poll();
+
+    document.querySelectorAll('.team-dot').forEach(function (el) {
+        var c = teamColors[el.getAttribute('data-team')];
+        if (c) el.style.background = c;
+    });
 })();
 </script>
 {% endblock %}

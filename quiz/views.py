@@ -1,8 +1,11 @@
+import csv
 import json
+import random
 
 from django.contrib import messages
 from django.contrib.auth import login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
+from django.core.cache import cache
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.db.models import Avg, Count, Q
 from django.http import HttpResponse, JsonResponse
@@ -498,6 +501,7 @@ def start_quiz(request, module_id):
     session = QuizSession.objects.create(
         module=module,
         host=request.user,
+        teams_enabled=request.GET.get("teams") == "1",
     )
     log_activity(
         request.user,
@@ -554,6 +558,41 @@ def host_reveal(request, code):
         session.status = QuizSession.Status.REVEAL
         session.save(update_fields=["status"])
     return redirect("host_control", code=code)
+
+
+def _host_post(request, session):
+    if request.method != "POST" or session.status != QuizSession.Status.QUESTION:
+        return JsonResponse({"ok": False, "error": "No question is live."}, status=400)
+    return None
+
+
+@login_required
+def host_pause(request, code):
+    session = get_object_or_404(QuizSession, code=code, host=request.user)
+    err = _host_post(request, session)
+    if err:
+        return err
+    session.pause()
+    return JsonResponse({"ok": True})
+
+
+@login_required
+def host_resume(request, code):
+    session = get_object_or_404(QuizSession, code=code, host=request.user)
+    if request.method != "POST":
+        return JsonResponse({"ok": False, "error": "Method not allowed"}, status=405)
+    session.resume()
+    return JsonResponse({"ok": True})
+
+
+@login_required
+def host_add_time(request, code):
+    session = get_object_or_404(QuizSession, code=code, host=request.user)
+    err = _host_post(request, session)
+    if err:
+        return err
+    session.add_time(seconds=15)
+    return JsonResponse({"ok": True})
 
 
 @login_required
@@ -618,8 +657,31 @@ def scoreboard(request, code):
                 "attempted": attempted,
                 "accuracy": round(correct / attempted * 100) if attempted else 0,
                 "pct": round(p.score / top * 100) if top else 0,
+                "team": p.team,
             }
         )
+    team_totals = []
+    if session.teams_enabled:
+        team_scores = {}
+        for p in leaderboard:
+            if p.team:
+                s = team_scores.setdefault(p.team, {"score": 0, "members": []})
+                s["score"] += p.score
+                s["members"].append(p)
+        for team_key, s in team_scores.items():
+            team_totals.append(
+                {
+                    "key": team_key,
+                    "label": Participant.Team(team_key).label,
+                    "score": s["score"],
+                    "members": len(s["members"]),
+                }
+            )
+        team_totals.sort(key=lambda t: t["score"], reverse=True)
+        team_top = team_totals[0]["score"] if team_totals else 0
+        for t in team_totals:
+            t["pct"] = round(t["score"] / team_top * 100) if team_top else 0
+
     return render(
         request,
         "quiz/scoreboard.html",
@@ -627,6 +689,7 @@ def scoreboard(request, code):
             "session": session,
             "rows": rows,
             "top": top,
+            "team_totals": team_totals,
             "avg_score": round(sum(r["score"] for r in rows) / len(rows))
             if rows
             else 0,
@@ -664,8 +727,11 @@ def join_name(request, code):
             if Participant.objects.filter(session=session, name=name).exists():
                 messages.error(request, "That name is taken here. Pick another.")
             else:
+                team = ""
+                if session.teams_enabled:
+                    team = form.cleaned_data.get("team", "")
                 participant = Participant.objects.create(
-                    session=session, name=name
+                    session=session, name=name, team=team
                 )
                 log_activity(
                     session.host,
@@ -724,6 +790,15 @@ def submit_answer(request, code):
     if participant is None:
         return JsonResponse({"ok": False, "error": "Rejoin quiz"}, status=403)
 
+    rate_key = f"answer_rate_{participant.id}"
+    last_submit = cache.get(rate_key)
+    now_epoch = timezone.now().timestamp()
+    if last_submit and now_epoch - last_submit < 1.0:
+        return JsonResponse(
+            {"ok": False, "error": "You are answering too quickly."}, status=429
+        )
+    cache.set(rate_key, now_epoch, timeout=5)
+
     if not session.is_accepting_answers():
         return JsonResponse(
             {"ok": False, "error": "Too late — answers are locked."}
@@ -775,7 +850,7 @@ def submit_answer(request, code):
 # ---------------- Live API (polling) ----------------
 
 
-def _session_json(session, host_id=None):
+def _session_json(session, host_id=None, shuffle_for=None):
     question = session.current_question
     now = timezone.now()
 
@@ -783,6 +858,8 @@ def _session_json(session, host_id=None):
         "id": session.id,
         "code": session.code,
         "status": session.status,
+        "paused": session.is_paused,
+        "teams_enabled": session.teams_enabled,
         "current_index": session.current_index,
         "total_questions": session.question_count,
         "module_title": session.module.title,
@@ -801,8 +878,12 @@ def _session_json(session, host_id=None):
         QuizSession.Status.REVEAL,
     ):
         letters = ["A", "B", "C", "D"]
+        ordered = list(question.choices.all())
+        if shuffle_for is not None and session.status == QuizSession.Status.QUESTION:
+            rng = random.Random(f"{shuffle_for}:{question.id}")
+            rng.shuffle(ordered)
         choices_data = []
-        for i, choice in enumerate(question.choices.all()):
+        for i, choice in enumerate(ordered):
             choices_data.append(
                 {
                     "id": choice.id,
@@ -826,6 +907,7 @@ def _session_json(session, host_id=None):
             {
                 "id": p.id,
                 "name": p.name,
+                "team": p.team,
                 "score": p.score,
                 "has_answered": bool(
                     question
@@ -857,7 +939,7 @@ def quiz_state(request, code):
         return JsonResponse(_session_json(session, host_id=request.user.id))
 
     participant = _get_participant(request, session)
-    data = _session_json(session)
+    data = _session_json(session, shuffle_for=participant.id if participant else None)
 
     question = session.current_question
     if participant is None:
@@ -865,6 +947,7 @@ def quiz_state(request, code):
     else:
         data["joined"] = True
         data["participant_id"] = participant.id
+        data["team"] = participant.team
         data["score"] = participant.score
         if question and Answer.objects.filter(
             participant=participant, question=question
@@ -993,3 +1076,242 @@ def session_report(request, session_id):
         f'attachment; filename="shamsquiz_report_{session.code}.pdf"'
     )
     return response
+
+
+@login_required
+def session_export_csv(request, session_id):
+    session = get_object_or_404(QuizSession, pk=session_id, host=request.user)
+    response = HttpResponse(content_type="text/csv")
+    response["Content-Disposition"] = (
+        f'attachment; filename="shamsquiz_answers_{session.code}.csv"'
+    )
+    writer = csv.writer(response)
+    writer.writerow(
+        ["Player", "Team", "Question #", "Question", "Chosen choice", "Correct?", "Points"]
+    )
+    for participant in session.participants.order_by("name"):
+        for answer in participant.answers.order_by(
+            "question__order", "question__id"
+        ):
+            count = session.question_count
+            writer.writerow(
+                [
+                    participant.name,
+                    participant.get_team_display(),
+                    f"{answer.question.order + 1}/{count}",
+                    answer.question.text,
+                    answer.choice.text,
+                    "Yes" if answer.choice.is_correct else "No",
+                    answer.points_earned,
+                ]
+            )
+    return response
+
+
+@login_required
+def module_duplicate(request, module_id):
+    module = get_object_or_404(Module, pk=module_id, teacher=request.user)
+    if request.method == "POST":
+        copy = Module.objects.create(
+            title=f"{module.title} (copy)",
+            description=module.description,
+            teacher=request.user,
+        )
+        for question in module.questions.all():
+            qcopy = Question.objects.create(
+                module=copy,
+                text=question.text,
+                time_limit=question.time_limit,
+                order=question.order,
+                is_active=question.is_active,
+            )
+            for choice in question.choices.all():
+                Choice.objects.create(
+                    question=qcopy,
+                    text=choice.text,
+                    is_correct=choice.is_correct,
+                )
+        messages.success(
+            request,
+            f"Module duplicated as “{copy.title}” with all questions.",
+        )
+        return redirect("module_detail", module_id=copy.id)
+    return redirect("module_detail", module_id=module.id)
+
+
+@login_required
+def module_export_csv(request, module_id):
+    module = get_object_or_404(Module, pk=module_id, teacher=request.user)
+    response = HttpResponse(content_type="text/csv")
+    response["Content-Disposition"] = (
+        f'attachment; filename="shamsquiz_module_{module.id}.csv"'
+    )
+    writer = csv.writer(response)
+    writer.writerow(
+        ["text", "time_limit", "choice_a", "choice_b", "choice_c", "choice_d", "correct"]
+    )
+    letters = ["A", "B", "C", "D"]
+    for question in module.questions.all():
+        choices = {c.letter: c for c in question.choices.all()}
+        correct = next(
+            (c.letter for c in choices.values() if c.is_correct), "A"
+        )
+        writer.writerow(
+            [
+                question.text,
+                question.time_limit,
+                *(choices.get(letter).text if choices.get(letter) else "" for letter in letters),
+                correct,
+            ]
+        )
+    return response
+
+
+@login_required
+def module_import_csv(request, module_id):
+    module = get_object_or_404(Module, pk=module_id, teacher=request.user)
+    if request.method != "POST" or "csv_file" not in request.FILES:
+        messages.error(request, "Attach a CSV file to import.")
+        return redirect("module_detail", module_id=module.id)
+    f = request.FILES["csv_file"]
+    if not str(getattr(f, "name", "")).lower().endswith(".csv"):
+        messages.error(request, "Please upload a .csv file.")
+        return redirect("module_detail", module_id=module.id)
+    text = f.read().decode("utf-8-sig", errors="replace")
+    reader = csv.DictReader(text.splitlines())
+    required = {"text", "time_limit", "choice_a", "choice_b", "correct"}
+    created = 0
+    errors = 0
+    exist_order = module.questions.count()
+    for row in reader:
+        if not row or not row.get("text", "").strip():
+            errors += 1
+            continue
+        if not required.issubset(row):
+            errors += 1
+            continue
+        try:
+            limit = max(10, min(300, int(float(row["time_limit"] or 30))))
+        except ValueError:
+            limit = 30
+        choice_texts = [
+            row.get("choice_a", "").strip(),
+            row.get("choice_b", "").strip(),
+            row.get("choice_c", "").strip(),
+            row.get("choice_d", "").strip(),
+        ]
+        real = [c for c in choice_texts if c]
+        if len(real) < 2:
+            errors += 1
+            continue
+        correct_letter = (row.get("correct") or "A").strip().upper()[:1]
+        correct_idx = "ABCD".index(correct_letter) if correct_letter in "ABCD" else 0
+
+        question = Question.objects.create(
+            module=module,
+            text=row["text"].strip(),
+            time_limit=limit,
+            order=exist_order + created,
+            is_active=True,
+        )
+        for i, ctext in enumerate(choice_texts):
+            if ctext:
+                Choice.objects.create(
+                    question=question,
+                    text=ctext,
+                    is_correct=(i == correct_idx),
+                )
+        created += 1
+    if created:
+        messages.success(
+            request, f"Imported {created} question(s) into “{module.title}”."
+        )
+    if errors:
+        messages.warning(
+            request, f"Skipped {errors} invalid row(s)."
+        )
+    return redirect("module_detail", module_id=module.id)
+
+
+# ---------------- Practice / revision mode ----------------
+
+PRACTICE_LETTERS = ["A", "B", "C", "D"]
+
+
+@login_required
+def practice_enable(request, module_id):
+    module = get_object_or_404(Module, pk=module_id, teacher=request.user)
+    if request.method == "POST":
+        if not module.practice_code:
+            module.practice_code = Module.generate_practice_code()
+            module.save(update_fields=["practice_code"])
+        messages.success(
+            request, f"Practice mode enabled with code {module.practice_code}."
+        )
+    return redirect("module_detail", module_id=module.id)
+
+
+@login_required
+def practice_disable(request, module_id):
+    module = get_object_or_404(Module, pk=module_id, teacher=request.user)
+    if request.method == "POST":
+        module.practice_code = ""
+        module.save(update_fields=["practice_code"])
+        messages.info(request, "Practice mode disabled.")
+    return redirect("module_detail", module_id=module.id)
+
+
+def practice(request):
+    if request.session.get("practice_code"):
+        return redirect("practice_play", code=request.session["practice_code"])
+    if request.method == "POST":
+        code = request.POST.get("code", "").strip().upper()
+        module = Module.objects.filter(practice_code=code).first()
+        if not module:
+            messages.error(request, "No practice set found with that code.")
+        else:
+            request.session["practice_code"] = module.practice_code
+            return redirect("practice_play", code=module.practice_code)
+    return render(request, "quiz/practice.html")
+
+
+def practice_play(request, code):
+    module = get_object_or_404(Module, practice_code=code)
+    if not request.session.get("practice_code"):
+        request.session["practice_code"] = module.practice_code
+    return render(
+        request,
+        "quiz/practice_play.html",
+        {"module_title": module.title, "code": module.practice_code},
+    )
+
+
+def practice_data(request, code):
+    module = get_object_or_404(Module, practice_code=code)
+    if module.questions.filter(is_active=True).count() < 1:
+        return JsonResponse({"ok": False, "error": "This set has no questions yet."})
+    questions = list(
+        module.questions.filter(is_active=True).order_by("order", "id")
+    )
+    random.shuffle(questions)
+    payload = []
+    for question in questions:
+        choices = list(question.choices.all())
+        random.shuffle(choices)
+        payload.append(
+            {
+                "id": question.id,
+                "text": question.text,
+                "time_limit": question.time_limit,
+                "choices": [
+                    {
+                        "id": c.id,
+                        "text": c.text,
+                        "letter": PRACTICE_LETTERS[i],
+                        "is_correct": c.is_correct,
+                    }
+                    for i, c in enumerate(choices)
+                ],
+            }
+        )
+    return JsonResponse({"ok": True, "title": module.title, "questions": payload})

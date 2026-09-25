@@ -43,8 +43,16 @@
         <!-- ---------- LIVE ---------- -->
         <section id="live-view" class="hidden">
             <div class="flex flex-wrap items-end justify-between gap-4">
-                <p class="text-sm font-semibold uppercase tracking-[0.2em] text-[#93c5fd]">Question {{ session.current_index|add:1 }} of {{ session.question_count }}</p>
-                <span id="q-ends" class="hidden rounded-full bg-[#d99322]/15 px-3.5 py-1 text-xs font-bold text-[#d99322]"></span>
+                <p class="text-sm font-semibold uppercase tracking-[0.2em] text-[#93c5fd]" id="live-progress">Question {{ session.current_index|add:1 }} of {{ session.question_count }}</p>
+                <div class="flex flex-wrap items-center gap-2">
+                    <span id="q-ends" class="hidden rounded-full bg-[#d99322]/15 px-3.5 py-1 text-xs font-bold text-[#d99322]"></span>
+                    <button id="btn-pause" onclick="hostAction('/host/{{ session.code }}/pause/')" class="hidden items-center gap-1.5 rounded-full bg-white/10 px-3.5 py-1 text-xs font-bold text-[#93c5fd] hover:bg-white/20" type="button">
+                        <i data-lucide="pause" class="h-3.5 w-3.5"></i> <span>Pause</span>
+                    </button>
+                    <button id="btn-add-time" onclick="hostAction('/host/{{ session.code }}/add-time/')" class="hidden items-center gap-1.5 rounded-full bg-white/10 px-3.5 py-1 text-xs font-bold text-[#93c5fd] hover:bg-white/20" type="button">
+                        <i data-lucide="timer" class="h-3.5 w-3.5"></i> +15s
+                    </button>
+                </div>
             </div>
             <h2 id="q-text" class="mt-4 max-w-3xl text-3xl font-black sm:text-4xl"></h2>
 
@@ -126,8 +134,17 @@
     var state = null;
     var params = null;
     var pts = 1000;
+    var prevStatus = null;
 
     function letter(i) { return String.fromCharCode(65 + i); }
+
+    var teamColors = { red: '#dc2626', blue: '#37a5ff', yellow: '#f5bd5e', green: '#34d399' };
+
+    function teamChip(team) {
+        var c = teamColors[team];
+        if (!team || !c) return '';
+        return '<span class="ml-2 inline-block h-2.5 w-2.5 shrink-0 rounded-full" style="background:' + c + '"></span>';
+    }
 
     function apply(prefix, text) {
         text.forEach(function (c, i) {
@@ -182,7 +199,7 @@
             li.innerHTML =
                 '<span class="grid h-7 w-7 shrink-0 place-items-center rounded-full text-xs font-black ' + medal + '">' + rank + '</span>' +
                 '<span class="min-w-0 flex-1">' +
-                '<span class="block truncate text-xs font-bold">' + escapeHtml(p.name) + '</span>' +
+                '<span class="block truncate text-xs font-bold">' + escapeHtml(p.name) + teamChip(p.team) + '</span>' +
                 '<span class="mt-1 block h-1.5 overflow-hidden rounded-full bg-white/10">' +
                 '<span class="block h-full rounded-full ' + bar + '" style="width:' + Math.round(p.score / leader * 100) + '%"></span></span>' +
                 '</span>' +
@@ -197,6 +214,12 @@
         });
     }
 
+    function hostAction(url) {
+        fetch(url, { method: 'POST', headers: { 'X-CSRFToken': getCookie('csrftoken') } })
+            .then(function (r) { return r.json(); })
+            .then(function () { poll(); }).catch(function () {});
+    }
+
     function render() {
         if (!state) return;
         if (state.status === 'waiting') {
@@ -206,8 +229,21 @@
         } else if (state.status === 'question') {
             show('live-view');
             document.getElementById('q-text').textContent = state.question.text;
-            document.getElementById('q-ends').textContent = 'ends in ~' + state.seconds_remaining + 's';
-            document.getElementById('q-ends').classList.toggle('hidden', false);
+            var isPaused = !!state.paused;
+            var qends = document.getElementById('q-ends');
+            qends.textContent = isPaused ? 'Paused' : 'ends in ~' + state.seconds_remaining + 's';
+            qends.classList.toggle('hidden', false);
+            var btnPause = document.getElementById('btn-pause');
+            var lbl = btnPause.querySelector('span');
+            lbl.textContent = isPaused ? 'Resume' : 'Pause';
+            btnPause.onclick = function () {
+                hostAction('/host/' + code + '/' + (isPaused ? 'resume' : 'pause') + '/');
+            };
+            btnPause.classList.remove('hidden');
+            btnPause.classList.add('inline-flex');
+            document.getElementById('btn-add-time').classList.toggle('hidden', isPaused);
+            if (isPaused) document.getElementById('btn-add-time').classList.remove('inline-flex');
+            else document.getElementById('btn-add-time').classList.add('inline-flex');
             renderPodium('podium', 'live-podium-empty', state.participants || []);
             if (JSON.stringify(state.question.choices) !== JSON.stringify(params)) {
                 params = state.question.choices;
@@ -237,6 +273,10 @@
         } else if (state.status === 'ended') {
             window.location.href = '/scoreboard/' + code + '/';
         }
+        if (prevStatus === 'question' && state.status === 'reveal' && window.FX) {
+            window.FX.reveal();
+        }
+        prevStatus = state.status;
     }
 
     function poll() {

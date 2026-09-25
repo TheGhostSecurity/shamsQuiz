@@ -55,7 +55,13 @@
             </div>
 
             <div class="mx-auto mt-8 max-w-lg rounded-2xl border border-white/10 bg-[#001f2e]/45 p-5 text-left shadow-2xl backdrop-blur-md">
-                <h2 class="text-left text-sm font-semibold uppercase tracking-wider text-white/50">Joined players</h2>
+                {% if session.teams_enabled %}
+                <div class="mb-4 flex items-center gap-2">
+                    <i data-lucide="users" class="h-4 w-4 text-[#d99322]"></i>
+                    <h2 class="text-sm font-semibold uppercase tracking-wider text-white/70">Teams mode active</h2>
+                </div>
+                {% endif %}
+                <h2 class="{% if session.teams_enabled %}mb-1 {% endif %}text-left text-sm font-semibold uppercase tracking-wider text-white/50">Joined players</h2>
                 <ul id="players" class="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
                 </ul>
                 <p id="no-players" class="mt-4 text-sm text-white/50">Waiting for players to join&hellip;</p>
@@ -75,11 +81,16 @@
 
     function renderPlayers(list) {
         playersEl.innerHTML = '';
+        var colors = { red: '#dc2626', blue: '#37a5ff', yellow: '#f5bd5e', green: '#34d399' };
         list.forEach(function (p) {
             var li = document.createElement('li');
             li.className = 'flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm';
+            var dot = (p.team && colors[p.team])
+                ? '<span class="h-2.5 w-2.5 shrink-0 rounded-full" style="background:' + colors[p.team] + '"></span>'
+                : '';
             li.innerHTML = '<span class="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-[#0067c0] text-xs font-bold">' +
-                (p.name.slice(0, 2).toUpperCase()) + '</span><span class="truncate font-semibold">' + escapeHtml(p.name) + '</span>';
+                (p.name.slice(0, 2).toUpperCase()) + '</span>' + dot +
+                '<span class="truncate font-semibold">' + escapeHtml(p.name) + '</span>';
             playersEl.appendChild(li);
         });
         noPlayers.style.display = list.length ? 'none' : 'block';
