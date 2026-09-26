@@ -54,24 +54,6 @@
             </label>
             <span class="hidden sm:inline text-[11px] text-[#8c8c8c]">columns: text,time_limit,A,B,C,D,correct</span>
         </form>
-        {% if module.practice_code %}
-        <div class="ml-auto flex items-center gap-2 rounded-lg border border-[#b9e6cd] bg-[#ecfdf3] px-3 py-2">
-            <i data-lucide="graduation-cap" class="h-3.5 w-3.5 text-[#107c41]"></i>
-            <span class="text-xs font-semibold text-[#107c41]">Practice code: <strong class="tracking-widest">{{ module.practice_code }}</strong></span>
-            <a class="rounded-md bg-[#107c41] px-2.5 py-1 text-[11px] font-bold text-white hover:bg-[#0c5e32]" href="{% url 'practice_play' module.practice_code %}">Open</a>
-            <form action="{% url 'practice_disable' module.id %}" method="post">
-                {% csrf_token %}
-                <button class="rounded-md border border-[#b9e6cd] px-2 py-1 text-[11px] font-semibold text-[#107c41] hover:bg-[#d5f5e6]" type="submit">Disable</button>
-            </form>
-        </div>
-        {% else %}
-        <form action="{% url 'practice_enable' module.id %}" method="post">
-            {% csrf_token %}
-            <button class="inline-flex items-center gap-1.5 rounded-lg border border-[#c8c8c8] bg-white px-3 py-2 text-xs font-semibold text-[#424242] hover:bg-[#f7f7f7]" type="submit">
-                <i data-lucide="graduation-cap" class="h-3.5 w-3.5"></i> Enable practice mode
-            </button>
-        </form>
-        {% endif %}
     </div>
 
     {% if questions %}

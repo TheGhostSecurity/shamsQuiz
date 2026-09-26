@@ -21,7 +21,8 @@ from .forms import (
     ProfileForm,
     ProfilePasswordForm,
     QuestionForm,
-    SignUpForm,
+    RegistrationCodeForm,
+    StudentSignUpForm,
 )
 from .models import (
     ActivityLog,
@@ -33,6 +34,7 @@ from .models import (
     Participant,
     Question,
     QuizSession,
+    RegistrationCode,
     User,
     log_activity,
 )
@@ -47,22 +49,65 @@ def home(request):
     return render(request, "quiz/home.html")
 
 
-def signup_view(request):
+def register_code(request):
+    """Step 1 for students: enter the code an admin/teacher generated."""
     if request.user.is_authenticated:
         return redirect("dashboard")
     if request.method == "POST":
-        form = SignUpForm(request.POST)
+        form = RegistrationCodeForm(request.POST)
+        if form.is_valid():
+            code = form.registration_code
+            request.session["registration_code"] = code.id
+            messages.success(
+                request,
+                f"Code {code.code} looks good — now set up your account.",
+            )
+            return redirect("register_account")
+    else:
+        form = RegistrationCodeForm()
+    return render(request, "registration/register_code.html", {"form": form})
+
+
+def register_account(request):
+    """Step 2 for students: signup form, only reachable with a valid code."""
+    if request.user.is_authenticated:
+        return redirect("dashboard")
+    code_id = request.session.get("registration_code")
+    registration_code = None
+    if code_id:
+        registration_code = (
+            RegistrationCode.objects.filter(pk=code_id, used_by__isnull=True).first()
+        )
+    if registration_code is None:
+        messages.info(
+            request,
+            "Start with your registration code first, then we'll set up your account.",
+        )
+        return redirect("register")
+    if request.method == "POST":
+        form = StudentSignUpForm(request.POST)
         if form.is_valid():
             user = form.save(commit=False)
-            user.role = form.cleaned_data["role"]
+            user.role = User.Role.STUDENT
             user.save()
+            registration_code.used_by = user
+            registration_code.used_at = timezone.now()
+            registration_code.save(update_fields=["used_by", "used_at"])
+            request.session.pop("registration_code", None)
             login(request, user)
             log_activity(user, ActivityLog.Action.SIGNUP, user.username)
-            messages.success(request, f"Welcome to ShamsQuiz, {user.username}!")
+            messages.success(
+                request,
+                f"Welcome to ShamsQuiz, {user.first_name or user.username}!",
+            )
             return redirect("dashboard")
     else:
-        form = SignUpForm()
-    return render(request, "registration/signup.html", {"form": form})
+        form = StudentSignUpForm()
+    return render(
+        request,
+        "registration/register_account.html",
+        {"form": form, "registration_code": registration_code},
+    )
 
 
 def login_view(request):
@@ -139,17 +184,80 @@ def dashboard(request):
         }
         return render(request, "quiz/teacher_dashboard.html", context)
 
-    ended_scores = (
-        Participant.objects.filter(
-            session__host__isnull=False,
-            session__status=QuizSession.Status.ENDED,
-        )
-        .order_by("-score")[:5]
+    # ---------------- Student dashboard: progress tracking ----------------
+    user = request.user
+    participations = list(
+        Participant.objects.filter(user=user)
+        .select_related("session", "session__module")
+        .order_by("-session__ended_at", "-session__created_at")
     )
+    ended = [p for p in participations if p.session.status == QuizSession.Status.ENDED]
+    correct_answers = Answer.objects.filter(
+        participant__user=user, choice__is_correct=True
+    ).count()
+    total_answers = Answer.objects.filter(participant__user=user).count()
+
+    history = []
+    module_stats = {}
+    recent_dates = []
+    recent_scores = []
+    for p in ended:
+        correct = p.answers.filter(choice__is_correct=True).count()
+        attempted = p.answers.count()
+        leaderboard = sorted(
+            p.session.participants.all(), key=lambda x: x.score, reverse=True
+        )
+        rank = next(
+            (i + 1 for i, x in enumerate(leaderboard) if x.id == p.id), None
+        )
+        history.append(
+            {
+                "participant": p,
+                "session": p.session,
+                "score": p.score,
+                "correct": correct,
+                "attempted": attempted,
+                "accuracy": round(correct / attempted * 100) if attempted else 0,
+                "rank": rank,
+            }
+        )
+        title = p.session.module.title
+        mod = module_stats.setdefault(
+            title, {"quizzes": 0, "correct": 0, "attempted": 0}
+        )
+        mod["quizzes"] += 1
+        mod["correct"] += correct
+        mod["attempted"] += attempted
+        ended_at = p.session.ended_at or p.session.created_at
+        recent_dates.append(f"{ended_at:%b %d}")
+        recent_scores.append(p.score)
+
+    for mod in module_stats.values():
+        mod["accuracy"] = round(mod["correct"] / mod["attempted"] * 100) if mod["attempted"] else 0
+    module_stats = sorted(
+        module_stats.items(), key=lambda kv: kv[1]["quizzes"], reverse=True
+    )
+
     return render(
         request,
-        "quiz/student_home.html",
-        {"top_scores": ended_scores},
+        "quiz/student_dashboard.html",
+        {
+            "stats": {
+                "quizzes": len(ended),
+                "joined": len(participations),
+                "points": sum(p.score for p in ended),
+                "correct": correct_answers,
+                "attempted": total_answers,
+                "accuracy": round(correct_answers / total_answers * 100)
+                if total_answers
+                else 0,
+            },
+            "history": history,
+            "module_stats": module_stats,
+            "trend_chart": charts.score_trend(recent_dates, recent_scores)
+            if recent_scores
+            else None,
+        },
     )
 
 
@@ -731,7 +839,12 @@ def join_name(request, code):
                 if session.teams_enabled:
                     team = form.cleaned_data.get("team", "")
                 participant = Participant.objects.create(
-                    session=session, name=name, team=team
+                    session=session,
+                    name=name,
+                    team=team,
+                    user=request.user
+                    if request.user.is_authenticated
+                    else None,
                 )
                 log_activity(
                     session.host,
@@ -1231,87 +1344,3 @@ def module_import_csv(request, module_id):
             request, f"Skipped {errors} invalid row(s)."
         )
     return redirect("module_detail", module_id=module.id)
-
-
-# ---------------- Practice / revision mode ----------------
-
-PRACTICE_LETTERS = ["A", "B", "C", "D"]
-
-
-@login_required
-def practice_enable(request, module_id):
-    module = get_object_or_404(Module, pk=module_id, teacher=request.user)
-    if request.method == "POST":
-        if not module.practice_code:
-            module.practice_code = Module.generate_practice_code()
-            module.save(update_fields=["practice_code"])
-        messages.success(
-            request, f"Practice mode enabled with code {module.practice_code}."
-        )
-    return redirect("module_detail", module_id=module.id)
-
-
-@login_required
-def practice_disable(request, module_id):
-    module = get_object_or_404(Module, pk=module_id, teacher=request.user)
-    if request.method == "POST":
-        module.practice_code = ""
-        module.save(update_fields=["practice_code"])
-        messages.info(request, "Practice mode disabled.")
-    return redirect("module_detail", module_id=module.id)
-
-
-def practice(request):
-    if request.session.get("practice_code"):
-        return redirect("practice_play", code=request.session["practice_code"])
-    if request.method == "POST":
-        code = request.POST.get("code", "").strip().upper()
-        module = Module.objects.filter(practice_code=code).first()
-        if not module:
-            messages.error(request, "No practice set found with that code.")
-        else:
-            request.session["practice_code"] = module.practice_code
-            return redirect("practice_play", code=module.practice_code)
-    return render(request, "quiz/practice.html")
-
-
-def practice_play(request, code):
-    module = get_object_or_404(Module, practice_code=code)
-    if not request.session.get("practice_code"):
-        request.session["practice_code"] = module.practice_code
-    return render(
-        request,
-        "quiz/practice_play.html",
-        {"module_title": module.title, "code": module.practice_code},
-    )
-
-
-def practice_data(request, code):
-    module = get_object_or_404(Module, practice_code=code)
-    if module.questions.filter(is_active=True).count() < 1:
-        return JsonResponse({"ok": False, "error": "This set has no questions yet."})
-    questions = list(
-        module.questions.filter(is_active=True).order_by("order", "id")
-    )
-    random.shuffle(questions)
-    payload = []
-    for question in questions:
-        choices = list(question.choices.all())
-        random.shuffle(choices)
-        payload.append(
-            {
-                "id": question.id,
-                "text": question.text,
-                "time_limit": question.time_limit,
-                "choices": [
-                    {
-                        "id": c.id,
-                        "text": c.text,
-                        "letter": PRACTICE_LETTERS[i],
-                        "is_correct": c.is_correct,
-                    }
-                    for i, c in enumerate(choices)
-                ],
-            }
-        )
-    return JsonResponse({"ok": True, "title": module.title, "questions": payload})

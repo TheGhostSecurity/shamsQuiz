@@ -5,7 +5,21 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
-from .models import Choice, Module, Participant, Question, QuizSession, User
+from .models import (
+    Choice,
+    Module,
+    Participant,
+    Question,
+    QuizSession,
+    RegistrationCode,
+    User,
+)
+
+
+def make_student(username="student1"):
+    return User.objects.create_user(
+        username=username, password="pw12345", role="student"
+    )
 
 
 def make_teacher():
@@ -26,21 +40,81 @@ def make_module(teacher, n=2):
     return m
 
 
-class AuthTests(TestCase):
-    def test_signup_teacher(self):
+class RegistrationTests(TestCase):
+    def test_student_registers_with_generated_code(self):
+        code = RegistrationCode.objects.create(
+            code=RegistrationCode.generate(),
+            assigned_to="Ali",
+            created_by=make_teacher(),
+        )
         resp = self.client.post(
-            reverse("signup"),
+            reverse("register"), {"code": code.code}
+        )
+        self.assertEqual(resp.status_code, 302)
+
+        resp = self.client.post(
+            reverse("register_account"),
             {
-                "username": "newteacher",
-                "email": "t@example.com",
-                "role": "teacher",
+                "username": "ali",
+                "first_name": "Ali Hassan",
+                "password1": "password123!",
+                "password2": "password123!",
+            },
+            follow=True,
+        )
+        self.assertEqual(resp.status_code, 200)
+        u = User.objects.get(username="ali")
+        self.assertEqual(u.role, User.Role.STUDENT)
+        self.assertFalse(u.is_teacher)
+        code.refresh_from_db()
+        self.assertTrue(code.is_used)
+        self.assertEqual(code.used_by, u)
+
+    def test_code_cannot_be_used_twice(self):
+        admin = make_teacher()
+        code = RegistrationCode.objects.create(
+            code=RegistrationCode.generate(), created_by=admin
+        )
+        s1 = make_student("first")
+        code.used_by = s1
+        code.used_at = timezone.now()
+        code.save()
+        # second attempt at same code fails loudly
+        resp = self.client.post(reverse("register"), {"code": code.code})
+        self.assertContains(
+            resp, "already been used", status_code=200
+        )
+
+    def test_register_account_requires_code_first(self):
+        resp = self.client.post(
+            reverse("register_account"),
+            {
+                "username": "nopass",
                 "password1": "password123!",
                 "password2": "password123!",
             },
         )
         self.assertEqual(resp.status_code, 302)
-        u = User.objects.get(username="newteacher")
-        self.assertTrue(u.is_teacher)
+        self.assertRedirects(resp, reverse("register"))
+        self.assertFalse(User.objects.filter(username="nopass").exists())
+
+    def test_student_cannot_register_as_teacher(self):
+        code = RegistrationCode.objects.create(
+            code=RegistrationCode.generate(), created_by=make_teacher()
+        )
+        self.client.post(reverse("register"), {"code": code.code})
+        resp = self.client.post(
+            reverse("register_account"),
+            {
+                "username": "person",
+                "password1": "password123!",
+                "password2": "password123!",
+            },
+            follow=True,
+        )
+        u = User.objects.get(username="person")
+        self.assertEqual(u.role, User.Role.STUDENT)  # role forced, never selectable
+        self.assertFalse(u.is_teacher)
 
 
 class ModuleTests(TestCase):
@@ -307,33 +381,6 @@ class QuizFlowTests(TestCase):
         self.assertEqual(resp.status_code, 429)
         self.assertFalse(json.loads(resp.content)["ok"])
 
-    def test_practice_flow(self):
-        self.client.post(
-            reverse("practice_enable", args=[self.module.id])
-        )
-        self.module.refresh_from_db()
-        self.assertTrue(self.module.practice_code)
-
-        resp = self.client.get(
-            reverse("practice_data", args=[self.module.practice_code])
-        )
-        data = json.loads(resp.content)
-        self.assertTrue(data["ok"])
-        self.assertEqual(len(data["questions"]), 3)
-        q0 = data["questions"][0]
-        self.assertIn("is_correct", q0["choices"][0])
-
-        # practice play page renders
-        resp = self.client.get(reverse("practice_play", args=[self.module.practice_code]))
-        self.assertEqual(resp.status_code, 200)
-        self.assertContains(resp, self.module.practice_code)
-
-        self.client.post(
-            reverse("practice_disable", args=[self.module.id])
-        )
-        self.module.refresh_from_db()
-        self.assertEqual(self.module.practice_code, "")
-
     def test_module_duplicate_and_export_import(self):
         m = self.module
         q = m.questions.first()
@@ -385,3 +432,53 @@ class QuizFlowTests(TestCase):
         html = resp.content.decode()
         self.assertIn("Red", html)
         self.assertIn("Blue", html)
+
+
+class StudentProgressTests(TestCase):
+    def setUp(self):
+        self.teacher = make_teacher()
+        self.student = make_student("progresskid")
+        self.module = make_module(self.teacher, n=1)
+        self.client.force_login(self.student)
+
+    def test_logged_in_student_play_is_linked_and_tracked(self):
+        self.host = self.client.__class__()
+        self.host.force_login(self.teacher)
+        resp = self.host.post(reverse("start_quiz", args=[self.module.id]))
+        session = QuizSession.objects.get(module=self.module)
+        self.host.post(reverse("host_start_question", args=[session.code]))
+        session.refresh_from_db()
+
+        # student joins logged-in -> participant.user linked
+        self.client.post(reverse("join"), {"code": session.code}, follow=True)
+        self.client.post(
+            reverse("join_name", args=[session.code]),
+            {"name": "progresskid"},
+            follow=True,
+        )
+        part = Participant.objects.get(session=session)
+        self.assertEqual(part.user, self.student)
+
+        q = session.current_question
+        self.client.post(
+            reverse("submit_answer", args=[session.code]),
+            {"choice_id": q.choices.get(is_correct=True).id},
+        )
+
+        # end the quiz
+        session.status = QuizSession.Status.ENDED
+        session.ended_at = timezone.now()
+        session.save(update_fields=["status", "ended_at"])
+
+        resp = self.client.get(reverse("dashboard"))
+        self.assertEqual(resp.status_code, 200)
+        html = resp.content.decode()
+        self.assertIn(self.module.title, html)  # module appears in progress
+        self.assertIn("Quizzes played", html)
+
+    def test_student_dashboard_empty_state(self):
+        resp = self.client.get(reverse("dashboard"))
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(
+            resp, "No quizzes yet", status_code=200
+        )

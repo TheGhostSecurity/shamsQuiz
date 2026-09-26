@@ -1,0 +1,132 @@
+{% extends "admin/base.html" %}
+{% block page_title %}Registration codes{% endblock %}
+{% block page_subtitle %}<p class="text-sm text-[#5c5c5c]">Students sign up only with codes you generate here and hand out manually.</p>{% endblock %}
+
+{% block panel %}
+<div class="grid gap-4 sm:grid-cols-3">
+    <div class="admin-card p-5">
+        <p class="text-sm font-semibold text-[#5c5c5c]">Total generated</p>
+        <p class="mt-2 text-3xl font-semibold text-black">{{ total }}</p>
+    </div>
+    <div class="admin-card p-5">
+        <p class="text-sm font-semibold text-[#5c5c5c]">Available</p>
+        <p class="mt-2 text-3xl font-semibold text-[#107c41]">{{ available }}</p>
+    </div>
+    <div class="admin-card p-5">
+        <p class="text-sm font-semibold text-[#5c5c5c]">Used</p>
+        <p class="mt-2 text-3xl font-semibold text-[#c43e1c]">{{ used }}</p>
+    </div>
+</div>
+
+<form class="admin-card mt-6 flex flex-col gap-3 p-4 lg:flex-row lg:items-end" method="post" action="{% url 'admin:registration_code_generate' %}">
+    {% csrf_token %}
+    <div class="w-full sm:w-40">
+        <label class="admin-label" for="id_quantity">How many codes?</label>
+        <input class="admin-input" type="number" name="quantity" id="id_quantity" value="10" min="1" max="50">
+    </div>
+    <div class="flex-1">
+        <label class="admin-label" for="id_assignedto">Assigned to (optional)</label>
+        <input class="admin-input" type="text" name="assigned_to" id="id_assignedto" placeholder="e.g. Form 2 — Biology (list of names)" maxlength="150">
+    </div>
+    <div class="flex-1">
+        <label class="admin-label" for="id_note">Note (optional)</label>
+        <input class="admin-input" type="text" name="note" id="id_note" placeholder="Any extra detail for this batch" maxlength="300">
+    </div>
+    <button class="admin-btn shrink-0" type="submit">
+        <i data-lucide="key-round" class="h-4 w-4"></i> Generate codes
+    </button>
+</form>
+
+<form class="admin-card mt-6 flex flex-col gap-3 p-4 sm:flex-row sm:items-center" method="get">
+    <input class="admin-input sm:max-w-xs" type="search" name="q" value="{{ q }}" placeholder="Search code or assignment…">
+    <select class="admin-input sm:w-44" name="status">
+        <option value="">All statuses</option>
+        <option value="available" {% if status == 'available' %}selected{% endif %}>Available</option>
+        <option value="used" {% if status == 'used' %}selected{% endif %}>Used</option>
+    </select>
+    <button class="admin-btn" type="submit"><i data-lucide="search" class="h-4 w-4"></i> Filter</button>
+    {% if q or status %}
+        <a class="admin-btn admin-btn-outline" href="{% url 'admin:registration_codes' %}">Clear</a>
+    {% endif %}
+</form>
+
+<div class="admin-card mt-6 overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="w-full min-w-[820px]">
+            <thead>
+                <tr>
+                    <th class="admin-th">Code</th>
+                    <th class="admin-th">Assigned to</th>
+                    <th class="admin-th">Note</th>
+                    <th class="admin-th">Created by</th>
+                    <th class="admin-th">Status</th>
+                    <th class="admin-th">Created</th>
+                    <th class="admin-th text-right">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-[#f0f0f0]">
+                {% for code in codes %}
+                    <tr class="hover:bg-[#fafafa]">
+                        <td class="admin-td">
+                            <span class="rounded-md bg-[#eaf4ff] px-2.5 py-1 font-mono text-sm font-bold tracking-widest text-[#0067c0]">{{ code.code }}</span>
+                        </td>
+                        <td class="admin-td text-[#424242]">{{ code.assigned_to|default:"—" }}</td>
+                        <td class="admin-td text-[#424242]">{{ code.note|default:"—" }}</td>
+                        <td class="admin-td text-[#424242]">{{ code.created_by.username|default:"—" }}</td>
+                        <td class="admin-td">
+                            {% if code.is_used %}
+                                <span class="rounded-full bg-[#fff7ed] px-2.5 py-1 text-xs font-semibold text-[#c43e1c]">Used by {{ code.used_by.username }}</span>
+                            {% else %}
+                                <span class="rounded-full bg-[#ecfdf3] px-2.5 py-1 text-xs font-semibold text-[#107c41]">Available</span>
+                            {% endif %}
+                        </td>
+                        <td class="admin-td text-xs text-[#5c5c5c]">
+                            {{ code.created_at|date:"M j, Y" }}
+                            {% if code.used_at %}<p class="mt-0.5">used {{ code.used_at|date:"M j, Y" }}</p>{% endif %}
+                        </td>
+                        <td class="admin-td">
+                            <div class="flex items-center justify-end gap-2">
+                                <button class="admin-btn admin-btn-outline admin-btn-sm copy-code" type="button" data-code="{{ code.code }}">
+                                    <i data-lucide="copy" class="h-3.5 w-3.5"></i> Copy
+                                </button>
+                                {% if not code.is_used %}
+                                    <form method="post" action="{% url 'admin:registration_code_delete' code.id %}" onsubmit="return confirm('Revoke code {{ code.code }}?')">
+                                        {% csrf_token %}
+                                        <button class="admin-btn admin-btn-outline admin-btn-sm hover:border-[#dc2626] hover:bg-red-50 hover:text-[#dc2626]" type="submit">
+                                            <i data-lucide="trash-2" class="h-3.5 w-3.5"></i> Revoke
+                                        </button>
+                                    </form>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="7" class="px-6 py-12 text-center text-sm text-[#5c5c5c]">
+                            No registration codes yet. Generate a batch above and give them to your students.
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% include "admin/_pagination.html" with page=codes %}
+</div>
+{% endblock %}
+
+{% block script %}
+<script>
+    document.querySelectorAll('.copy-code').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            navigator.clipboard.writeText(btn.getAttribute('data-code')).then(function () {
+                var old = btn.innerHTML;
+                btn.innerHTML = '<i data-lucide="check" class="h-3.5 w-3.5"></i> Copied';
+                setTimeout(function () {
+                    btn.innerHTML = old;
+                    if (window.lucide) window.lucide.createIcons();
+                }, 1200);
+            });
+        });
+    });
+</script>
+{% endblock %}

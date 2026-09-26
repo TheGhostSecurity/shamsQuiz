@@ -8,7 +8,16 @@ from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
-from .models import ActivityLog, Answer, Module, Participant, Question, QuizSession, log_activity
+from .models import (
+    ActivityLog,
+    Answer,
+    Module,
+    Participant,
+    Question,
+    QuizSession,
+    RegistrationCode,
+    log_activity,
+)
 
 User = get_user_model()
 
@@ -125,6 +134,86 @@ def users(request):
         "admin/users.html",
         {"users": _paginate(request, queryset), "q": q, "role": role, "base_query": _base_query(request)},
     )
+
+
+@admin_required
+def registration_codes(request):
+    q = request.GET.get("q", "").strip()
+    status = request.GET.get("status", "").strip()
+    queryset = (
+        RegistrationCode.objects.select_related("created_by", "used_by")
+        .order_by("-created_at")
+    )
+    if q:
+        queryset = queryset.filter(
+            Q(code__icontains=q) | Q(assigned_to__icontains=q)
+        )
+    if status == "used":
+        queryset = queryset.filter(used_by__isnull=False)
+    elif status == "available":
+        queryset = queryset.filter(used_by__isnull=True)
+    total = RegistrationCode.objects.count()
+    available = RegistrationCode.objects.filter(used_by__isnull=True).count()
+    return render(
+        request,
+        "admin/registration_codes.html",
+        {
+            "codes": _paginate(request, queryset),
+            "q": q,
+            "status": status,
+            "total": total,
+            "available": available,
+            "used": total - available,
+            "base_query": _base_query(request),
+        },
+    )
+
+
+@admin_required
+def registration_code_generate(request):
+    if request.method == "POST":
+        try:
+            quantity = max(1, min(50, int(request.POST.get("quantity", "10"))))
+        except ValueError:
+            quantity = 10
+        assigned_to = request.POST.get("assigned_to", "").strip()
+        note = request.POST.get("note", "").strip()
+        codes = []
+        for _ in range(quantity):
+            codes.append(
+                RegistrationCode.objects.create(
+                    code=RegistrationCode.generate(),
+                    assigned_to=assigned_to,
+                    note=note,
+                    created_by=request.user,
+                )
+            )
+        log_activity(
+            request.user,
+            ActivityLog.Action.CODE_GENERATED,
+            target=f"{quantity} code(s)",
+            details=assigned_to or note,
+        )
+        messages.success(
+            request,
+            f"Generated {len(codes)} registration code(s). Hand them out to your students.",
+        )
+    return redirect("admin:registration_codes")
+
+
+@admin_required
+def registration_code_delete(request, code_id):
+    code = get_object_or_404(RegistrationCode, pk=code_id)
+    if request.method == "POST":
+        if code.used_by:
+            messages.error(
+                request,
+                f"Code {code.code} is already used by “{code.used_by.username}”. Delete the student instead.",
+            )
+        else:
+            messages.success(request, f"Code {code.code} revoked.")
+            code.delete()
+    return redirect("admin:registration_codes")
 
 
 @admin_required

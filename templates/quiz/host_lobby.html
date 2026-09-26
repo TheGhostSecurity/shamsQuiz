@@ -25,12 +25,18 @@
             </span>
             <span class="font-bold">ShamsQuiz</span>
         </div>
-        <form action="{% url 'host_end_quiz' session.code %}" method="post" onsubmit="return confirm('Cancel this quiz without scoring?')">
-            {% csrf_token %}
-            <button class="rounded-lg border border-white/20 px-3 py-1.5 text-sm font-semibold text-white/70 hover:bg-white/10" type="submit">
-                <i data-lucide="x" class="mr-1 inline h-4 w-4"></i> Cancel
-            </button>
-        </form>
+        <div class="flex items-center gap-2">
+            <a class="inline-flex items-center gap-2 rounded-lg border border-white/20 px-3 py-1.5 text-sm font-semibold text-white/80 hover:bg-white/10" href="{% url 'dashboard' %}">
+                <i data-lucide="layout-dashboard" class="h-4 w-4"></i>
+                Dashboard
+            </a>
+            <form action="{% url 'host_end_quiz' session.code %}" method="post" onsubmit="return confirm('Cancel this quiz without scoring?')">
+                {% csrf_token %}
+                <button class="rounded-lg border border-white/20 px-3 py-1.5 text-sm font-semibold text-white/70 hover:bg-white/10" type="submit">
+                    <i data-lucide="x" class="mr-1 inline h-4 w-4"></i> Cancel
+                </button>
+            </form>
+        </div>
     </header>
 
     <main class="relative z-10 flex flex-1 items-center justify-center px-5 py-10">

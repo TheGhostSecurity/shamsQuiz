@@ -4,7 +4,12 @@ from . import views
 
 urlpatterns = [
     path("", views.home, name="home"),
-    path("signup/", views.signup_view, name="signup"),
+    path("register/", views.register_code, name="register"),
+    path(
+        "register/account/",
+        views.register_account,
+        name="register_account",
+    ),
     path(
         "login/",
         views.login_view,
@@ -66,16 +71,6 @@ urlpatterns = [
         "modules/<int:module_id>/import/",
         views.module_import_csv,
         name="module_import_csv",
-    ),
-    path(
-        "modules/<int:module_id>/practice/enable/",
-        views.practice_enable,
-        name="practice_enable",
-    ),
-    path(
-        "modules/<int:module_id>/practice/disable/",
-        views.practice_disable,
-        name="practice_disable",
     ),
 
     # Teacher: questions
@@ -153,19 +148,6 @@ urlpatterns = [
     path("join/", views.join, name="join"),
     path("join/<str:code>/", views.join_name, name="join_name"),
     path("play/<str:code>/", views.student_play, name="student_play"),
-
-    # Practice / revision mode
-    path("practice/", views.practice, name="practice"),
-    path(
-        "practice/<str:code>/",
-        views.practice_play,
-        name="practice_play",
-    ),
-    path(
-        "api/practice/<str:code>/",
-        views.practice_data,
-        name="practice_data",
-    ),
 
     # API
     path("api/quiz/<str:code>/state/", views.quiz_state, name="quiz_state"),

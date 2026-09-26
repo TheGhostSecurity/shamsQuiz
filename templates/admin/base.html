@@ -183,6 +183,9 @@
             <a href="{% url 'admin:users' %}" class="admin-nav-link {% if request.resolver_match.url_name in 'users user_create user_edit user_delete' %}admin-nav-active{% endif %}">
                 <i data-lucide="users" class="h-4 w-4"></i> Users
             </a>
+            <a href="{% url 'admin:registration_codes' %}" class="admin-nav-link {% if request.resolver_match.url_name in 'registration_codes registration_code_generate registration_code_delete' %}admin-nav-active{% endif %}">
+                <i data-lucide="key-round" class="h-4 w-4"></i> Registration codes
+            </a>
             <a href="{% url 'admin:modules' %}" class="admin-nav-link {% if request.resolver_match.url_name in 'modules module_detail module_delete' %}admin-nav-active{% endif %}">
                 <i data-lucide="folder-open" class="h-4 w-4"></i> Modules
             </a>
