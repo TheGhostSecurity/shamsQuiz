@@ -11,7 +11,6 @@ from .models import (
     Participant,
     Question,
     QuizSession,
-    RegistrationCode,
     User,
 )
 
@@ -40,81 +39,50 @@ def make_module(teacher, n=2):
     return m
 
 
-class RegistrationTests(TestCase):
-    def test_student_registers_with_generated_code(self):
-        code = RegistrationCode.objects.create(
-            code=RegistrationCode.generate(),
-            assigned_to="Ali",
-            created_by=make_teacher(),
-        )
-        resp = self.client.post(
-            reverse("register"), {"code": code.code}
-        )
-        self.assertEqual(resp.status_code, 302)
-
-        resp = self.client.post(
-            reverse("register_account"),
+class SignupTests(TestCase):
+    def _signup(self, username, name="", password="password123!"):
+        return self.client.post(
+            reverse("signup"),
             {
-                "username": "ali",
-                "first_name": "Ali Hassan",
-                "password1": "password123!",
-                "password2": "password123!",
+                "username": username,
+                "first_name": name,
+                "password1": password,
+                "password2": password,
             },
             follow=True,
         )
+
+    def test_student_signup_creates_account_and_logs_in(self):
+        resp = self._signup("ali", "Ali Hassan")
         self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.request["PATH_INFO"], "/dashboard/")
         u = User.objects.get(username="ali")
         self.assertEqual(u.role, User.Role.STUDENT)
         self.assertFalse(u.is_teacher)
-        code.refresh_from_db()
-        self.assertTrue(code.is_used)
-        self.assertEqual(code.used_by, u)
+        self.assertTrue(self.client.session.get("_auth_user_id"))
 
-    def test_code_cannot_be_used_twice(self):
-        admin = make_teacher()
-        code = RegistrationCode.objects.create(
-            code=RegistrationCode.generate(), created_by=admin
-        )
-        s1 = make_student("first")
-        code.used_by = s1
-        code.used_at = timezone.now()
-        code.save()
-        # second attempt at same code fails loudly
-        resp = self.client.post(reverse("register"), {"code": code.code})
-        self.assertContains(
-            resp, "already been used", status_code=200
-        )
-
-    def test_register_account_requires_code_first(self):
-        resp = self.client.post(
-            reverse("register_account"),
-            {
-                "username": "nopass",
-                "password1": "password123!",
-                "password2": "password123!",
-            },
-        )
-        self.assertEqual(resp.status_code, 302)
-        self.assertRedirects(resp, reverse("register"))
-        self.assertFalse(User.objects.filter(username="nopass").exists())
-
-    def test_student_cannot_register_as_teacher(self):
-        code = RegistrationCode.objects.create(
-            code=RegistrationCode.generate(), created_by=make_teacher()
-        )
-        self.client.post(reverse("register"), {"code": code.code})
-        resp = self.client.post(
-            reverse("register_account"),
-            {
-                "username": "person",
-                "password1": "password123!",
-                "password2": "password123!",
-            },
-            follow=True,
-        )
+    def test_signup_always_student_role(self):
+        self._signup("person")
         u = User.objects.get(username="person")
         self.assertEqual(u.role, User.Role.STUDENT)  # role forced, never selectable
-        self.assertFalse(u.is_teacher)
+
+    def test_signup_page_renders(self):
+        resp = self.client.get(reverse("signup"))
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, "Create your account")
+
+    def test_signup_rejects_duplicate_username(self):
+        make_student("taken")
+        resp = self.client.post(
+            reverse("signup"),
+            {
+                "username": "taken",
+                "password1": "password123!",
+                "password2": "password123!",
+            },
+        )
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, "already exists")
 
 
 class ModuleTests(TestCase):

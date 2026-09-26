@@ -1,41 +1,10 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 
-from .models import Choice, Module, Participant, Question, QuizSession, RegistrationCode, User
+from .models import Choice, Module, Participant, Question, QuizSession, User
 
 
 INPUT_CLASS = "w-full rounded-md border border-[#d6d6d6] px-4 py-3 text-sm outline-none focus:border-[#0067c0] focus:ring-2 focus:ring-[#b7d8ff]"
-
-
-class RegistrationCodeForm(forms.Form):
-    code = forms.CharField(
-        label="Registration code",
-        max_length=8,
-        widget=forms.TextInput(
-            attrs={
-                "class": INPUT_CLASS,
-                "placeholder": "e.g. QW3RTY7X",
-                "maxlength": "8",
-                "autocomplete": "off",
-                "autofocus": True,
-            }
-        ),
-        help_text="Enter the code your teacher or school gave you.",
-    )
-
-    def clean_code(self):
-        code = self.cleaned_data["code"].strip().upper()
-        code = "".join(code.split())
-        self.registration_code = RegistrationCode.objects.filter(code=code).first()
-        if not self.registration_code:
-            raise forms.ValidationError(
-                "That code isn't recognised. Ask your teacher to double-check it."
-            )
-        if self.registration_code.is_used:
-            raise forms.ValidationError(
-                "That code has already been used to create an account."
-            )
-        return code
 
 
 class StudentSignUpForm(UserCreationForm):

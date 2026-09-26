@@ -21,7 +21,7 @@
             {% else %}
                 <a class="rounded-lg px-4 py-2 text-sm font-semibold text-[#0067c0] hover:bg-[#eaf4ff]" href="{% url 'join' %}">Join a quiz</a>
                 <a class="rounded-lg px-4 py-2 text-sm font-semibold text-[#0067c0] hover:bg-[#eaf4ff]" href="{% url 'login' %}">Log in</a>
-                <a class="rounded-lg bg-[#002b3f] px-4 py-2 text-sm font-semibold text-white hover:bg-[#001f2e]" href="{% url 'register' %}">Create account</a>
+                <a class="rounded-lg bg-[#002b3f] px-4 py-2 text-sm font-semibold text-white hover:bg-[#001f2e]" href="{% url 'signup' %}">Create account</a>
             {% endif %}
         </div>
     </div>
@@ -48,7 +48,7 @@
                         Open dashboard
                     </a>
                 {% else %}
-                    <a class="inline-flex items-center gap-2 rounded-md bg-[#002b3f] px-6 py-3.5 text-sm font-semibold text-white hover:bg-[#001f2e]" href="{% url 'register' %}">
+                    <a class="inline-flex items-center gap-2 rounded-md bg-[#002b3f] px-6 py-3.5 text-sm font-semibold text-white hover:bg-[#001f2e]" href="{% url 'signup' %}">
                         <i data-lucide="user-plus" class="h-4 w-4"></i>
                         Create account
                     </a>

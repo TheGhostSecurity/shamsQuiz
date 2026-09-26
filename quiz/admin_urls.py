@@ -10,17 +10,6 @@ urlpatterns = [
     path("users/new/", views_admin.user_create, name="user_create"),
     path("users/<int:user_id>/edit/", views_admin.user_edit, name="user_edit"),
     path("users/<int:user_id>/delete/", views_admin.user_delete, name="user_delete"),
-    path("registration-codes/", views_admin.registration_codes, name="registration_codes"),
-    path(
-        "registration-codes/generate/",
-        views_admin.registration_code_generate,
-        name="registration_code_generate",
-    ),
-    path(
-        "registration-codes/<int:code_id>/delete/",
-        views_admin.registration_code_delete,
-        name="registration_code_delete",
-    ),
     path("modules/", views_admin.modules, name="modules"),
     path("modules/<int:module_id>/", views_admin.module_detail, name="module_detail"),
     path("modules/<int:module_id>/delete/", views_admin.module_delete, name="module_delete"),

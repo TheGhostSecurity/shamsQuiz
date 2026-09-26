@@ -21,7 +21,6 @@ from .forms import (
     ProfileForm,
     ProfilePasswordForm,
     QuestionForm,
-    RegistrationCodeForm,
     StudentSignUpForm,
 )
 from .models import (
@@ -34,7 +33,6 @@ from .models import (
     Participant,
     Question,
     QuizSession,
-    RegistrationCode,
     User,
     log_activity,
 )
@@ -49,51 +47,15 @@ def home(request):
     return render(request, "quiz/home.html")
 
 
-def register_code(request):
-    """Step 1 for students: enter the code an admin/teacher generated."""
+def signup_view(request):
     if request.user.is_authenticated:
         return redirect("dashboard")
-    if request.method == "POST":
-        form = RegistrationCodeForm(request.POST)
-        if form.is_valid():
-            code = form.registration_code
-            request.session["registration_code"] = code.id
-            messages.success(
-                request,
-                f"Code {code.code} looks good — now set up your account.",
-            )
-            return redirect("register_account")
-    else:
-        form = RegistrationCodeForm()
-    return render(request, "registration/register_code.html", {"form": form})
-
-
-def register_account(request):
-    """Step 2 for students: signup form, only reachable with a valid code."""
-    if request.user.is_authenticated:
-        return redirect("dashboard")
-    code_id = request.session.get("registration_code")
-    registration_code = None
-    if code_id:
-        registration_code = (
-            RegistrationCode.objects.filter(pk=code_id, used_by__isnull=True).first()
-        )
-    if registration_code is None:
-        messages.info(
-            request,
-            "Start with your registration code first, then we'll set up your account.",
-        )
-        return redirect("register")
     if request.method == "POST":
         form = StudentSignUpForm(request.POST)
         if form.is_valid():
             user = form.save(commit=False)
             user.role = User.Role.STUDENT
             user.save()
-            registration_code.used_by = user
-            registration_code.used_at = timezone.now()
-            registration_code.save(update_fields=["used_by", "used_at"])
-            request.session.pop("registration_code", None)
             login(request, user)
             log_activity(user, ActivityLog.Action.SIGNUP, user.username)
             messages.success(
@@ -103,11 +65,7 @@ def register_account(request):
             return redirect("dashboard")
     else:
         form = StudentSignUpForm()
-    return render(
-        request,
-        "registration/register_account.html",
-        {"form": form, "registration_code": registration_code},
-    )
+    return render(request, "registration/signup.html", {"form": form})
 
 
 def login_view(request):

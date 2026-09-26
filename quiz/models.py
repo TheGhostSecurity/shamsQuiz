@@ -289,50 +289,6 @@ class Participant(models.Model):
         return self.name
 
 
-class RegistrationCode(models.Model):
-    code = models.CharField(max_length=8, unique=True, editable=False)
-    assigned_to = models.CharField(max_length=150, blank=True)
-    note = models.CharField(max_length=300, blank=True)
-    created_by = models.ForeignKey(
-        User,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="generated_registration_codes",
-    )
-    used_by = models.ForeignKey(
-        User,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="redeemed_registration_codes",
-    )
-    used_at = models.DateTimeField(null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        ordering = ["-created_at"]
-
-    def __str__(self):
-        return f"{self.code} · {'used' if self.used_at else 'available'}"
-
-    @property
-    def is_used(self):
-        return self.used_at is not None
-
-    @staticmethod
-    def generate():
-        alphabet = (
-            string.ascii_uppercase
-            + string.digits
-            # avoid lookalike characters students may misread
-        ).replace("O", "").replace("I", "").replace("0", "").replace("1", "")
-        while True:
-            code = "".join(random.choices(alphabet, k=8))
-            if not RegistrationCode.objects.filter(code=code).exists():
-                return code
-
-
 class Answer(models.Model):
     participant = models.ForeignKey(
         Participant, on_delete=models.CASCADE, related_name="answers"
@@ -359,7 +315,6 @@ class ActivityLog(models.Model):
         LOGIN = "login", "Login"
         LOGOUT = "logout", "Logout"
         SIGNUP = "signup", "Signup"
-        CODE_GENERATED = "code_generated", "Registration codes generated"
         MODULE_CREATED = "module_created", "Module created"
         MODULE_DELETED = "module_deleted", "Module deleted"
         QUIZ_HOSTED = "quiz_hosted", "Quiz hosted"
