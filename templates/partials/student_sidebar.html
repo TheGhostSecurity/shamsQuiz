@@ -1,0 +1,49 @@
+{% load static %}
+<aside class="fixed inset-y-0 left-0 z-40 flex w-16 flex-col border-r border-[#e7e7e7] bg-white lg:w-60">
+    <div class="flex items-center gap-2.5 px-3 py-5 lg:px-5">
+        <a href="{% url 'home' %}" class="flex items-center gap-2.5">
+            <span class="relative block h-7 w-10 shrink-0">
+                <span class="absolute left-0 top-2 h-4 w-7 rounded-full bg-[#0078d4]"></span>
+                <span class="absolute right-0 top-1 h-5 w-7 rounded-full bg-[#37a5ff]"></span>
+                <span class="absolute left-3 top-0 h-7 w-7 rounded-full bg-gradient-to-br from-[#54b6ff] to-[#005a9e]"></span>
+            </span>
+            <span class="hidden text-lg font-bold tracking-tight text-black lg:inline">ShamsQuiz</span>
+        </a>
+    </div>
+
+    <nav class="flex-1 space-y-1 overflow-y-auto px-3 py-2">
+        <a class="flex items-center gap-2.5 rounded-lg px-2 py-2.5 text-sm font-semibold lg:px-3 {% if request.resolver_match.url_name in 'utils util_download' %}bg-[#eaf4ff] text-[#0067c0]{% else %}text-[#424242] hover:bg-[#f3f3f3]{% endif %}" href="{% url 'utils' %}" title="Utils">
+            <i data-lucide="files" class="mx-auto h-5 w-5 shrink-0 lg:mx-0 lg:h-4 lg:w-4"></i>
+            <span class="hidden lg:inline">Utils</span>
+        </a>
+        <a class="flex items-center gap-2.5 rounded-lg px-2 py-2.5 text-sm font-semibold lg:px-3 {% if request.resolver_match.url_name == 'student_progress' %}bg-[#eaf4ff] text-[#0067c0]{% else %}text-[#424242] hover:bg-[#f3f3f3]{% endif %}" href="{% url 'student_progress' %}" title="Progress tracking">
+            <i data-lucide="chart-line" class="mx-auto h-5 w-5 shrink-0 lg:mx-0 lg:h-4 lg:w-4"></i>
+            <span class="hidden lg:inline">Progress tracking</span>
+        </a>
+        <a class="flex items-center gap-2.5 rounded-lg px-2 py-2.5 text-sm font-semibold lg:px-3 {% if request.resolver_match.url_name == 'profile' %}bg-[#eaf4ff] text-[#0067c0]{% else %}text-[#424242] hover:bg-[#f3f3f3]{% endif %}" href="{% url 'profile' %}" title="Profile management">
+            <i data-lucide="user-round" class="mx-auto h-5 w-5 shrink-0 lg:mx-0 lg:h-4 lg:w-4"></i>
+            <span class="hidden lg:inline">Profile management</span>
+        </a>
+        <a class="flex items-center gap-2.5 rounded-lg px-2 py-2.5 text-sm font-semibold lg:px-3 {% if request.resolver_match.url_name == 'dashboard' %}bg-[#eaf4ff] text-[#0067c0]{% else %}text-[#424242] hover:bg-[#f3f3f3]{% endif %}" href="{% url 'dashboard' %}" title="My progress">
+            <i data-lucide="gauge" class="mx-auto h-5 w-5 shrink-0 lg:mx-0 lg:h-4 lg:w-4"></i>
+            <span class="hidden lg:inline">My progress</span>
+        </a>
+    </nav>
+
+    <div class="sidebar-bottom space-y-1 border-t border-[#eadfca] px-3 py-3">
+        <div class="flex items-center justify-between gap-2">
+            {% include "partials/theme_toggle.html" %}
+            <a class="hidden flex-1 items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-[#424242] hover:bg-[#f3f3f3] lg:flex" href="{% url 'home' %}" target="_blank" rel="noopener">
+                <i data-lucide="external-link" class="h-4 w-4"></i>
+                View site
+            </a>
+        </div>
+        <form action="{% url 'logout' %}" method="post" class="contents">
+            {% csrf_token %}
+            <button class="flex w-full items-center gap-2.5 rounded-lg px-2 py-2 text-sm font-semibold text-[#424242] hover:bg-[#f3f3f3] lg:px-3" type="submit" title="Log out">
+                <i data-lucide="log-out" class="mx-auto h-5 w-5 shrink-0 lg:mx-0 lg:h-4 lg:w-4"></i>
+                <span class="hidden lg:inline">Log out</span>
+            </button>
+        </form>
+    </div>
+</aside>

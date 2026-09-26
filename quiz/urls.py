@@ -16,6 +16,7 @@ urlpatterns = [
         name="logout",
     ),
     path("dashboard/", views.dashboard, name="dashboard"),
+    path("progress/", views.student_progress, name="student_progress"),
     path("profile/", views.teacher_profile, name="profile"),
     path("teacher/history/", views.teacher_history, name="teacher_history"),
     path(
@@ -145,6 +146,7 @@ urlpatterns = [
     path("play/<str:code>/", views.student_play, name="student_play"),
 
     # Teacher utils (books / ppt / doc files)
+    path("utils/", views.student_utils, name="utils"),
     path("teacher/utils/", views.teacher_utils, name="teacher_utils"),
     path(
         "utils/<int:util_id>/delete/",

@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block title %}Utils · ShamsQuiz{% endblock %}
+{% block body_class %}bg-[#f7f7f7] text-[#1f1f1f] antialiased{% endblock %}
+{% block main_class %}min-h-screen bg-[#f7f7f7]{% endblock %}
+{% block messages_wrap %}ml-16 mr-4 mt-4 space-y-2 px-4 lg:ml-64 lg:mr-6{% endblock %}
+
+{% block content %}
+<div class="flex min-h-screen">
+    {% include "partials/student_sidebar.html" %}
+
+    <div class="ml-16 min-w-0 flex-1 lg:ml-60">
+        <header class="sticky top-0 z-30 border-b border-[#e7e7e7] bg-white/90 px-4 py-4 backdrop-blur sm:px-6 lg:px-8">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                    <p class="text-xs font-semibold text-[#0067c0] sm:text-sm">Utils</p>
+                    <h1 class="mt-0.5 text-lg font-semibold tracking-[-0.01em] text-black sm:text-xl">
+                        Study materials from your teachers
+                    </h1>
+                </div>
+                <a class="inline-flex items-center gap-2 rounded-lg bg-[#0067c0] px-3.5 py-2 text-sm font-semibold text-white hover:bg-[#005a9e] sm:px-4 sm:py-2.5" href="{% url 'join' %}">
+                    <i data-lucide="zap" class="h-4 w-4"></i>
+                    Join a quiz
+                </a>
+            </div>
+        </header>
+
+        <main class="p-4 sm:p-6 lg:p-8">
+            {% if util_teachers %}
+                <form class="rounded-2xl border border-[#e7e7e7] bg-white p-4 shadow-sm sm:p-5" method="get" action="{% url 'utils' %}">
+                    <label class="mb-1.5 block text-xs font-semibold text-[#5c5c5c]" for="utils-teacher">
+                        Pick a teacher to see their books, slides and notes
+                    </label>
+                    <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
+                        <select id="utils-teacher" name="teacher" class="w-full rounded-lg border border-[#d6d6d6] bg-white px-3 py-2.5 text-sm outline-none focus:border-[#0067c0] focus:ring-2 focus:ring-[#b7d8ff] sm:max-w-sm">
+                            {% for teacher in util_teachers %}
+                                <option value="{{ teacher.id }}" {% if selected_teacher and selected_teacher.id == teacher.id %}selected{% endif %}>{{ teacher.first_name|default:teacher.username }}</option>
+                            {% endfor %}
+                        </select>
+                        <button type="submit" class="inline-flex items-center justify-center gap-2 rounded-lg bg-[#0067c0] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#005a9e]">
+                            <i data-lucide="search" class="h-4 w-4"></i> Show files
+                        </button>
+                    </div>
+                </form>
+            {% endif %}
+
+            {% if selected_teacher %}
+                <div class="mt-6 flex items-center gap-3">
+                    <span class="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[#eaf4ff] text-sm font-bold text-[#0067c0]">
+                        {{ selected_teacher.username|slice:":2"|upper }}
+                    </span>
+                    <div>
+                        <p class="font-semibold text-black">{{ selected_teacher.first_name|default:selected_teacher.username }}</p>
+                        <p class="text-xs text-[#5c5c5c]">{{ utils_files|length }} file{{ utils_files|pluralize }} available for download</p>
+                    </div>
+                </div>
+            {% endif %}
+
+            <section class="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                {% for util in utils_files %}
+                    <article class="question-card group flex flex-col overflow-hidden rounded-2xl border border-[#e8e1d3] border-t-4 border-t-[#c8a657] bg-white p-4 shadow-sm transition duration-200 hover:-translate-y-1 hover:shadow-lg hover:shadow-[#8a6b2d]/10">
+                        <div class="flex items-center gap-3">
+                            <span class="grid h-11 w-11 shrink-0 place-items-center rounded-xl {% if util.category == 'book' %}bg-[#fef2f2] text-[#dc2626]{% elif util.category == 'ppt' %}bg-[#fff7ed] text-[#c47019]{% elif util.category == 'doc' %}bg-[#eaf4ff] text-[#0067c0]{% else %}bg-[#f3f3f3] text-[#5c5c5c]{% endif %}">
+                                {% if util.category == 'book' %}
+                                    <i data-lucide="book-open" class="h-5 w-5"></i>
+                                {% elif util.category == 'ppt' %}
+                                    <i data-lucide="presentation" class="h-5 w-5"></i>
+                                {% elif util.category == 'doc' %}
+                                    <i data-lucide="file-text" class="h-5 w-5"></i>
+                                {% else %}
+                                    <i data-lucide="file" class="h-5 w-5"></i>
+                                {% endif %}
+                            </span>
+                            <span class="rounded-full bg-[#fbf5e8] px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-[#92712e]">{{ util.get_category_display }}</span>
+                        </div>
+                        <h3 class="mt-3 text-sm font-bold leading-snug text-[#17212b]" title="{{ util.title }}">{{ util.title }}</h3>
+                        {% if util.description %}
+                            <p class="mt-1 line-clamp-2 text-xs leading-5 text-[#5c5c5c]">{{ util.description }}</p>
+                        {% endif %}
+                        <p class="mt-2 truncate text-xs text-[#8c8c8c]">{{ util.filename }} · {{ util.created_at|date:"M j, Y" }}</p>
+                        <a class="mt-4 inline-flex items-center justify-center gap-2 rounded-lg bg-[#0067c0] px-3 py-2 text-sm font-semibold text-white hover:bg-[#005a9e]" href="{% url 'util_download' util.id %}">
+                            <i data-lucide="download" class="h-4 w-4"></i>
+                            Download
+                        </a>
+                    </article>
+                {% empty %}
+                    <div class="rounded-2xl border border-[#e7e7e7] bg-white px-5 py-14 text-center sm:col-span-2 xl:col-span-3">
+                        <i data-lucide="folder-open" class="mx-auto h-10 w-10 text-[#c8c8c8]"></i>
+                        <p class="mt-3 font-semibold text-black">No files here yet</p>
+                        <p class="mx-auto mt-1 max-w-sm text-sm text-[#5c5c5c]">Pick another teacher or check back later.</p>
+                    </div>
+                {% endfor %}
+            </section>
+
+            {% if not util_teachers %}
+                <section class="mt-6 rounded-2xl border border-[#e7e7e7] bg-white px-5 py-14 text-center shadow-sm">
+                    <i data-lucide="files" class="mx-auto h-10 w-10 text-[#c8c8c8]"></i>
+                    <p class="mt-3 font-semibold text-black">No study files available yet</p>
+                    <p class="mx-auto mt-1 max-w-sm text-sm text-[#5c5c5c]">When teachers upload books, slides or notes, they will appear here for you to download.</p>
+                </section>
+            {% endif %}
+        </main>
+    </div>
+</div>
+{% endblock %}

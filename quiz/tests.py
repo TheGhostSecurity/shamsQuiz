@@ -485,7 +485,8 @@ class UtilsTests(TestCase):
         self.assertTrue(util.filename().endswith(".pdf"))
 
         self.client.force_login(self.student)
-        resp = self.client.get(reverse("dashboard"), {"tab": "utils"})
+        resp = self.client.get(reverse("utils"))
+        self.assertEqual(resp.status_code, 200)
         self.assertContains(resp, "Math Notes")
         self.assertContains(resp, util.teacher.username)
 
@@ -527,10 +528,51 @@ class UtilsTests(TestCase):
         util.save(update_fields=["is_active"])
 
         self.client.force_login(self.student)
-        resp = self.client.get(reverse("dashboard"), {"tab": "utils"})
+        resp = self.client.get(reverse("utils"))
         self.assertNotContains(resp, "Math Notes")
         resp = self.client.get(reverse("util_download", args=[util.id]))
         self.assertEqual(resp.status_code, 404)
+
+    def test_teacher_utils_add_button_opens_form_and_cards_render(self):
+        self.client.force_login(self.teacher)
+        resp = self.client.get(reverse("teacher_utils"))
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, "Add util")
+        self.assertNotIn("Upload a new util", resp.content.decode())
+
+        self._upload()
+
+        resp = self.client.get(reverse("teacher_utils"), {"add": "1"})
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, "Upload a new util")
+        self.assertContains(resp, "Math Notes")
+        self.assertContains(resp, "Your files")
+
+    def test_student_selects_teacher_on_utils_page(self):
+        self.client.force_login(self.teacher)
+        self._upload()
+        util = TeacherUtil.objects.get(title="Math Notes")
+        other = User.objects.create_user(
+            username="teacher2", password="pw12345", role="teacher"
+        )
+
+        self.client.force_login(self.student)
+        resp = self.client.get(reverse("utils"), {"teacher": str(self.teacher.id)})
+        self.assertContains(resp, "Math Notes")
+        resp = self.client.get(reverse("utils"), {"teacher": str(other.id)})
+        self.assertNotContains(resp, "Math Notes")
+
+    def test_student_progress_and_profile_pages_render(self):
+        self.client.force_login(self.student)
+        resp = self.client.get(reverse("student_progress"))
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, "Nothing to track yet")
+        self.assertContains(resp, "Progress tracking")
+
+        resp = self.client.get(reverse("profile"))
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, "Profile management")
+        self.assertContains(resp, "Change password")
 
 
 class AdminUserLifecycleTests(TestCase):

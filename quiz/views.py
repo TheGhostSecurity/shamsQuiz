@@ -144,8 +144,15 @@ def dashboard(request):
         }
         return render(request, "quiz/teacher_dashboard.html", context)
 
-    # ---------------- Student dashboard: progress tracking ----------------
-    user = request.user
+    # ---------------- Student dashboard: my progress ----------------
+    return render(
+        request,
+        "quiz/student_dashboard.html",
+        _student_progress_data(request.user),
+    )
+
+
+def _student_progress_data(user):
     participations = list(
         Participant.objects.filter(user=user)
         .select_related("session", "session__module")
@@ -198,7 +205,50 @@ def dashboard(request):
         module_stats.items(), key=lambda kv: kv[1]["quizzes"], reverse=True
     )
 
-    # ---------------- Utils tab ----------------
+    return {
+        "stats": {
+            "quizzes": len(ended),
+            "joined": len(participations),
+            "points": sum(p.score for p in ended),
+            "correct": correct_answers,
+            "attempted": total_answers,
+            "accuracy": round(correct_answers / total_answers * 100)
+            if total_answers
+            else 0,
+        },
+        "history": history,
+        "module_stats": module_stats,
+        "trend_chart": charts.score_trend(recent_dates, recent_scores)
+        if recent_scores
+        else None,
+        "accuracy_donut": charts.accuracy_donut(correct_answers, total_answers - correct_answers)
+        if total_answers
+        else None,
+    }
+
+
+@login_required
+def student_progress(request):
+    if request.user.is_teacher:
+        return redirect("dashboard")
+    data = _student_progress_data(request.user)
+    return render(
+        request,
+        "quiz/student_progress.html",
+        {
+            "trend_chart": data["trend_chart"],
+            "module_stats": data["module_stats"],
+            "accuracy_donut": data["accuracy_donut"],
+            "stats": data["stats"],
+            "history": data["history"],
+        },
+    )
+
+
+@login_required
+def student_utils(request):
+    if request.user.is_teacher:
+        return redirect("dashboard")
     util_teachers = (
         User.objects.filter(role=User.Role.TEACHER, utils__is_active=True)
         .distinct()
@@ -209,39 +259,17 @@ def dashboard(request):
     utils_files = []
     if teacher_id.isdigit():
         selected_teacher = (
-            User.objects.filter(role=User.Role.TEACHER, pk=int(teacher_id))
-            .filter(utils__is_active=True)
-            .distinct()
-            .first()
+            User.objects.filter(role=User.Role.TEACHER, pk=int(teacher_id)).first()
         )
     if selected_teacher:
         utils_files = selected_teacher.utils.filter(is_active=True)
     elif util_teachers:
         selected_teacher = util_teachers.first()
         utils_files = selected_teacher.utils.filter(is_active=True)
-
-    active_tab = "utils" if request.GET.get("tab") == "utils" else "progress"
-
     return render(
         request,
-        "quiz/student_dashboard.html",
+        "quiz/student_utils.html",
         {
-            "stats": {
-                "quizzes": len(ended),
-                "joined": len(participations),
-                "points": sum(p.score for p in ended),
-                "correct": correct_answers,
-                "attempted": total_answers,
-                "accuracy": round(correct_answers / total_answers * 100)
-                if total_answers
-                else 0,
-            },
-            "history": history,
-            "module_stats": module_stats,
-            "trend_chart": charts.score_trend(recent_dates, recent_scores)
-            if recent_scores
-            else None,
-            "active_tab": active_tab,
             "util_teachers": util_teachers,
             "selected_teacher": selected_teacher,
             "utils_files": utils_files,
@@ -580,7 +608,7 @@ def teacher_profile(request):
             return redirect("profile")
     return render(
         request,
-        "quiz/teacher_profile.html",
+        "quiz/teacher_profile.html" if request.user.is_teacher else "quiz/student_profile.html",
         {"profile_form": profile_form, "password_form": password_form},
     )
 
@@ -1363,6 +1391,7 @@ def teacher_utils(request):
             "form": form,
             "utils": utils,
             "uploads_count": utils.count(),
+            "show_form": bool(request.POST) or request.GET.get("add") == "1",
         },
     )
 
