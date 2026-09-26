@@ -7,6 +7,7 @@ from django.core.paginator import Paginator
 from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
+from django.views.decorators.http import require_POST
 
 from .models import (
     ActivityLog,
@@ -118,6 +119,7 @@ def index(request):
 def users(request):
     q = request.GET.get("q", "").strip()
     role = request.GET.get("role", "").strip()
+    status = request.GET.get("status", "").strip()
     queryset = User.objects.all().order_by("-date_joined")
     if q:
         queryset = queryset.filter(
@@ -128,10 +130,29 @@ def users(request):
         )
     if role in ("teacher", "student"):
         queryset = queryset.filter(role=role)
+    if status == "deactivated":
+        queryset = queryset.filter(is_active=False, is_archived=False)
+    elif status == "archived":
+        queryset = queryset.filter(is_archived=True)
+    else:
+        status = "active"
+        queryset = queryset.filter(is_active=True, is_archived=False)
+    counts = {
+        "active": User.objects.filter(is_active=True, is_archived=False).count(),
+        "deactivated": User.objects.filter(is_active=False, is_archived=False).count(),
+        "archived": User.objects.filter(is_archived=True).count(),
+    }
     return render(
         request,
         "admin/users.html",
-        {"users": _paginate(request, queryset), "q": q, "role": role, "base_query": _base_query(request)},
+        {
+            "users": _paginate(request, queryset),
+            "q": q,
+            "role": role,
+            "status": status,
+            "counts": counts,
+            "base_query": _base_query(request),
+        },
     )
 
 
@@ -206,11 +227,69 @@ def user_delete(request, user_id):
     if request.method == "POST":
         if user == request.user:
             messages.error(request, "You cannot delete your own account.")
+        elif not user.is_archived:
+            messages.error(
+                request,
+                "Archive the user first — deactivation and archiving keep a record, deletion is final.",
+            )
         else:
             name = user.username
             user.delete()
             messages.success(request, f"User '{name}' deleted.")
             log_activity(request.user, ActivityLog.Action.USER_DELETED, name)
+    return redirect("admin:users")
+
+
+@admin_required
+@require_POST
+def user_deactivate(request, user_id):
+    user = get_object_or_404(User, pk=user_id)
+    if user == request.user:
+        messages.error(request, "You cannot deactivate your own account.")
+    elif user.is_archived:
+        messages.error(request, "That user is archived — restore before changing.")
+    else:
+        user.is_active = False
+        user.save(update_fields=["is_active"])
+        messages.success(request, f"User '{user.username}' deactivated.")
+        log_activity(request.user, ActivityLog.Action.USER_UPDATED, f"{user.username} (deactivated)")
+    return redirect("admin:users")
+
+
+@admin_required
+@require_POST
+def user_reactivate(request, user_id):
+    user = get_object_or_404(User, pk=user_id)
+    if user.is_archived:
+        messages.error(request, "That user is archived — restore before changing.")
+    else:
+        user.is_active = True
+        user.save(update_fields=["is_active"])
+        messages.success(request, f"User '{user.username}' reactivated.")
+        log_activity(request.user, ActivityLog.Action.USER_UPDATED, f"{user.username} (reactivated)")
+    return redirect("admin:users")
+
+
+@admin_required
+@require_POST
+def user_archive(request, user_id):
+    user = get_object_or_404(User, pk=user_id)
+    if user == request.user:
+        messages.error(request, "You cannot archive your own account.")
+    else:
+        user.archive()
+        messages.success(request, f"User '{user.username}' archived.")
+        log_activity(request.user, ActivityLog.Action.USER_UPDATED, f"{user.username} (archived)")
+    return redirect("admin:users")
+
+
+@admin_required
+@require_POST
+def user_restore(request, user_id):
+    user = get_object_or_404(User, pk=user_id)
+    user.restore()
+    messages.success(request, f"User '{user.username}' restored.")
+    log_activity(request.user, ActivityLog.Action.USER_UPDATED, f"{user.username} (restored)")
     return redirect("admin:users")
 
 

@@ -24,10 +24,21 @@ class User(AbstractUser):
     youtube = models.CharField(max_length=200, blank=True)
     tiktok = models.CharField(max_length=200, blank=True)
     website = models.CharField(max_length=200, blank=True)
+    is_archived = models.BooleanField(default=False)
 
     @property
     def is_teacher(self):
         return self.role == self.Role.TEACHER
+
+    def archive(self):
+        self.is_archived = True
+        self.is_active = False
+        self.save(update_fields=["is_archived", "is_active"])
+
+    def restore(self):
+        self.is_archived = False
+        self.is_active = True
+        self.save(update_fields=["is_archived", "is_active"])
 
 
 class Module(models.Model):
@@ -353,3 +364,32 @@ def log_activity(actor, action, target="", details=""):
     ActivityLog.objects.create(
         actor=actor, action=action, target=target, details=details
     )
+
+
+class TeacherUtil(models.Model):
+    class Category(models.TextChoices):
+        BOOK = "book", "Book (PDF)"
+        PPT = "ppt", "Presentation (PPT)"
+        DOC = "doc", "Document (DOC)"
+        OTHER = "other", "Other"
+
+    teacher = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="utils"
+    )
+    title = models.CharField(max_length=200)
+    category = models.CharField(
+        max_length=10, choices=Category.choices, default=Category.OTHER
+    )
+    description = models.CharField(max_length=300, blank=True)
+    file = models.FileField(upload_to="utils/%Y/%m/")
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return self.title
+
+    def filename(self):
+        return self.file.name.rsplit("/", 1)[-1]

@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 
-from .models import Choice, Module, Participant, Question, QuizSession, User
+from .models import Choice, Module, Participant, Question, QuizSession, TeacherUtil, User
 
 
 INPUT_CLASS = "w-full rounded-md border border-[#d6d6d6] px-4 py-3 text-sm outline-none focus:border-[#0067c0] focus:ring-2 focus:ring-[#b7d8ff]"
@@ -301,3 +301,45 @@ class JoinNameForm(forms.Form):
                 "class": "w-full rounded-md border border-[#d6d6d6] bg-white px-4 py-3 text-sm outline-none focus:border-[#0067c0] focus:ring-2 focus:ring-[#b7d8ff]"
             }
         )
+
+
+UTIL_MAX_SIZE = 25 * 1024 * 1024
+UTIL_ALLOWED_EXTENSIONS = {"pdf", "ppt", "pptx", "doc", "docx"}
+
+
+class TeacherUtilForm(forms.ModelForm):
+    class Meta:
+        model = TeacherUtil
+        fields = ["title", "category", "description", "file"]
+        widgets = {
+            "title": forms.TextInput(
+                attrs={
+                    "class": INPUT_CLASS,
+                    "placeholder": "e.g. Form II Mathematics Notes",
+                }
+            ),
+            "category": forms.Select(
+                attrs={"class": INPUT_CLASS}
+            ),
+            "description": forms.Textarea(
+                attrs={
+                    "class": INPUT_CLASS,
+                    "rows": 2,
+                    "placeholder": "Optional short description",
+                }
+            ),
+            "file": forms.ClearableFileInput(attrs={"class": INPUT_CLASS}),
+        }
+
+    def clean_file(self):
+        f = self.cleaned_data.get("file")
+        if not f:
+            raise forms.ValidationError("Choose a file to upload.")
+        ext = f.name.rsplit(".", 1)[-1].lower() if "." in f.name else ""
+        if ext not in UTIL_ALLOWED_EXTENSIONS:
+            raise forms.ValidationError(
+                "Only PDF, PPT, PPTX, DOC or DOCX files are allowed."
+            )
+        if f.size > UTIL_MAX_SIZE:
+            raise forms.ValidationError("File is too large (max 25 MB).")
+        return f

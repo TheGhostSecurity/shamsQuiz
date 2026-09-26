@@ -8,7 +8,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.cache import cache
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.db.models import Avg, Count, Q
-from django.http import HttpResponse, JsonResponse
+from django.http import FileResponse, Http404, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_POST
@@ -22,6 +22,7 @@ from .forms import (
     ProfilePasswordForm,
     QuestionForm,
     StudentSignUpForm,
+    TeacherUtilForm,
 )
 from .models import (
     ActivityLog,
@@ -33,6 +34,7 @@ from .models import (
     Participant,
     Question,
     QuizSession,
+    TeacherUtil,
     User,
     log_activity,
 )
@@ -196,6 +198,30 @@ def dashboard(request):
         module_stats.items(), key=lambda kv: kv[1]["quizzes"], reverse=True
     )
 
+    # ---------------- Utils tab ----------------
+    util_teachers = (
+        User.objects.filter(role=User.Role.TEACHER, utils__is_active=True)
+        .distinct()
+        .order_by("username")
+    )
+    teacher_id = request.GET.get("teacher", "").strip()
+    selected_teacher = None
+    utils_files = []
+    if teacher_id.isdigit():
+        selected_teacher = (
+            User.objects.filter(role=User.Role.TEACHER, pk=int(teacher_id))
+            .filter(utils__is_active=True)
+            .distinct()
+            .first()
+        )
+    if selected_teacher:
+        utils_files = selected_teacher.utils.filter(is_active=True)
+    elif util_teachers:
+        selected_teacher = util_teachers.first()
+        utils_files = selected_teacher.utils.filter(is_active=True)
+
+    active_tab = "utils" if request.GET.get("tab") == "utils" else "progress"
+
     return render(
         request,
         "quiz/student_dashboard.html",
@@ -215,6 +241,10 @@ def dashboard(request):
             "trend_chart": charts.score_trend(recent_dates, recent_scores)
             if recent_scores
             else None,
+            "active_tab": active_tab,
+            "util_teachers": util_teachers,
+            "selected_teacher": selected_teacher,
+            "utils_files": utils_files,
         },
     )
 
@@ -1302,3 +1332,81 @@ def module_import_csv(request, module_id):
             request, f"Skipped {errors} invalid row(s)."
         )
     return redirect("module_detail", module_id=module.id)
+
+
+# ---------------- Teacher utils (books / ppt / doc files) ----------------
+
+
+@login_required
+def teacher_utils(request):
+    user = request.user
+    if not user.is_teacher:
+        messages.error(request, "Teachers only.")
+        return redirect("dashboard")
+    if request.method == "POST":
+        form = TeacherUtilForm(request.POST, request.FILES)
+        if form.is_valid():
+            util = form.save(commit=False)
+            util.teacher = user
+            util.save()
+            messages.success(
+                request, f"“{util.title}” uploaded — students can now see it."
+            )
+            return redirect("teacher_utils")
+    else:
+        form = TeacherUtilForm()
+    utils = user.utils.all()
+    return render(
+        request,
+        "quiz/teacher_utils.html",
+        {
+            "form": form,
+            "utils": utils,
+            "uploads_count": utils.count(),
+        },
+    )
+
+
+@login_required
+@require_POST
+def teacher_util_delete(request, util_id):
+    util = get_object_or_404(TeacherUtil, pk=util_id, teacher=request.user)
+    if util.file:
+        storage = util.file.storage
+        if storage.exists(util.file.name):
+            storage.delete(util.file.name)
+    title = util.title
+    util.delete()
+    messages.success(request, f"“{title}” removed.")
+    return redirect("teacher_utils")
+
+
+@login_required
+@require_POST
+def teacher_util_toggle(request, util_id):
+    util = get_object_or_404(TeacherUtil, pk=util_id, teacher=request.user)
+    util.is_active = not util.is_active
+    util.save(update_fields=["is_active"])
+    messages.success(
+        request,
+        f"“{util.title}” is now {'visible to students' if util.is_active else 'hidden'}.",
+    )
+    return redirect("teacher_utils")
+
+
+@login_required
+def util_download(request, util_id):
+    util = get_object_or_404(TeacherUtil, pk=util_id)
+    if not (util.is_active or util.teacher_id == request.user.id):
+        raise Http404("Not found.")
+    try:
+        handle = util.file.open("rb")
+    except (FileNotFoundError, ValueError, OSError):
+        raise Http404("File is missing on the server.")
+    response = FileResponse(
+        handle,
+        content_type="application/octet-stream",
+        as_attachment=True,
+        filename=util.filename(),
+    )
+    return response

@@ -144,6 +144,24 @@ urlpatterns = [
     path("join/<str:code>/", views.join_name, name="join_name"),
     path("play/<str:code>/", views.student_play, name="student_play"),
 
+    # Teacher utils (books / ppt / doc files)
+    path("teacher/utils/", views.teacher_utils, name="teacher_utils"),
+    path(
+        "utils/<int:util_id>/delete/",
+        views.teacher_util_delete,
+        name="teacher_util_delete",
+    ),
+    path(
+        "utils/<int:util_id>/toggle/",
+        views.teacher_util_toggle,
+        name="teacher_util_toggle",
+    ),
+    path(
+        "utils/<int:util_id>/download/",
+        views.util_download,
+        name="util_download",
+    ),
+
     # API
     path("api/quiz/<str:code>/state/", views.quiz_state, name="quiz_state"),
     path(

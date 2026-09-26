@@ -189,12 +189,6 @@
             <a href="{% url 'admin:sessions' %}" class="admin-nav-link {% if request.resolver_match.url_name in 'sessions session_detail session_end' %}admin-nav-active{% endif %}">
                 <i data-lucide="radio" class="h-4 w-4"></i> Quiz sessions
             </a>
-            <a href="{% url 'admin:participants' %}" class="admin-nav-link {% if request.resolver_match.url_name == 'participants' %}admin-nav-active{% endif %}">
-                <i data-lucide="user-check" class="h-4 w-4"></i> Participants
-            </a>
-            <a href="{% url 'admin:answers' %}" class="admin-nav-link {% if request.resolver_match.url_name == 'answers' %}admin-nav-active{% endif %}">
-                <i data-lucide="list-checks" class="h-4 w-4"></i> Answers
-            </a>
             <a href="{% url 'admin:teachers' %}" class="admin-nav-link {% if request.resolver_match.url_name == 'teachers' %}admin-nav-active{% endif %}">
                 <i data-lucide="presentation" class="h-4 w-4"></i> Teachers
             </a>

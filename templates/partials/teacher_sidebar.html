@@ -38,6 +38,10 @@
             <i data-lucide="library" class="h-4 w-4"></i>
             Question bank
         </a>
+        <a class="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-semibold {% if request.resolver_match.url_name in 'teacher_utils teacher_util_delete teacher_util_toggle' %}bg-[#eaf4ff] text-[#0067c0]{% else %}text-[#424242] hover:bg-[#f3f3f3]{% endif %}" href="{% url 'teacher_utils' %}">
+            <i data-lucide="files" class="h-4 w-4"></i>
+            Utils
+        </a>
         <a class="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-semibold {% if request.resolver_match.url_name == 'profile' %}bg-[#eaf4ff] text-[#0067c0]{% else %}text-[#424242] hover:bg-[#f3f3f3]{% endif %}" href="{% url 'profile' %}">
             <i data-lucide="user-round" class="h-4 w-4"></i>
             Account

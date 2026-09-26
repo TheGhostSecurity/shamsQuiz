@@ -1,7 +1,9 @@
 import json
+import tempfile
 from datetime import timedelta
 
-from django.test import TestCase
+from django.core.files.uploadedfile import SimpleUploadedFile
+from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
@@ -11,6 +13,7 @@ from .models import (
     Participant,
     Question,
     QuizSession,
+    TeacherUtil,
     User,
 )
 
@@ -450,3 +453,138 @@ class StudentProgressTests(TestCase):
         self.assertContains(
             resp, "No quizzes yet", status_code=200
         )
+
+
+@override_settings(MEDIA_ROOT=tempfile.mkdtemp(prefix="shamsquiz_utils_test_"))
+class UtilsTests(TestCase):
+    def setUp(self):
+        self.teacher = make_teacher()
+        self.student = make_student("utilstudent")
+
+    def _upload(self, client=None, filename="math notes.pdf", category="book"):
+        client = client or self.client
+        return client.post(
+            reverse("teacher_utils"),
+            {
+                "title": "Math Notes",
+                "category": category,
+                "description": "Algebra chapter",
+                "file": SimpleUploadedFile(
+                    filename, b"%PDF-1.4 fake content", content_type="application/pdf"
+                ),
+            },
+            follow=True,
+        )
+
+    def test_teacher_uploads_util_and_student_sees_it(self):
+        self.client.force_login(self.teacher)
+        resp = self._upload()
+        self.assertEqual(resp.status_code, 200)
+        util = TeacherUtil.objects.get(title="Math Notes")
+        self.assertEqual(util.teacher, self.teacher)
+        self.assertTrue(util.filename().endswith(".pdf"))
+
+        self.client.force_login(self.student)
+        resp = self.client.get(reverse("dashboard"), {"tab": "utils"})
+        self.assertContains(resp, "Math Notes")
+        self.assertContains(resp, util.teacher.username)
+
+    def test_student_can_download_util(self):
+        self.client.force_login(self.teacher)
+        self._upload()
+        util = TeacherUtil.objects.get(title="Math Notes")
+        self.client.force_login(self.student)
+        resp = self.client.get(reverse("util_download", args=[util.id]))
+        self.assertEqual(resp.status_code, 200)
+        self.assertIn("Content-Disposition", resp)
+        self.assertIn(b"fake content", b"".join(resp.streaming_content))
+
+    def test_upload_rejects_bad_extension_and_student_cannot_manage(self):
+        self.client.force_login(self.teacher)
+        resp = self.client.post(
+            reverse("teacher_utils"),
+            {
+                "title": "Bad File",
+                "category": "other",
+                "file": SimpleUploadedFile(
+                    "malware.exe", b"not a util", content_type="application/octet-stream"
+                ),
+            },
+            follow=True,
+        )
+        self.assertContains(resp, "Only PDF, PPT, PPTX, DOC or DOCX")
+        self.assertFalse(TeacherUtil.objects.filter(title="Bad File").exists())
+
+        self.client.force_login(self.student)
+        resp = self.client.get(reverse("teacher_utils"))
+        self.assertEqual(resp.status_code, 302)
+
+    def test_hidden_util_not_visible_to_students(self):
+        self.client.force_login(self.teacher)
+        self._upload()
+        util = TeacherUtil.objects.get(title="Math Notes")
+        util.is_active = False
+        util.save(update_fields=["is_active"])
+
+        self.client.force_login(self.student)
+        resp = self.client.get(reverse("dashboard"), {"tab": "utils"})
+        self.assertNotContains(resp, "Math Notes")
+        resp = self.client.get(reverse("util_download", args=[util.id]))
+        self.assertEqual(resp.status_code, 404)
+
+
+class AdminUserLifecycleTests(TestCase):
+    def setUp(self):
+        self.admin = User.objects.create_user(
+            username="owner",
+            password="pw12345",
+            role="teacher",
+            is_staff=True,
+        )
+        self.client.force_login(self.admin)
+
+    def _post(self, name, user_id):
+        return self.client.post(reverse(f"admin:{name}", args=[user_id]))
+
+    def test_deactivate_blocks_login_then_reactivate_restores(self):
+        student = make_student("mark")
+        self.client.post(reverse("admin:user_deactivate", args=[student.id]))
+        student.refresh_from_db()
+        self.assertFalse(student.is_active)
+        self.assertFalse(self.client.__class__().login(username="mark", password="pw12345"))
+
+        self.client.post(reverse("admin:user_reactivate", args=[student.id]))
+        student.refresh_from_db()
+        self.assertTrue(student.is_active)
+        self.assertTrue(self.client.__class__().login(username="mark", password="pw12345"))
+
+    def test_archive_then_delete_only_allowed_when_archived(self):
+        student = make_student("pete")
+        self._post("user_delete", student.id)
+        self.assertTrue(User.objects.filter(username="pete").exists())
+
+        self._post("user_archive", student.id)
+        student.refresh_from_db()
+        self.assertTrue(student.is_archived)
+        self.assertFalse(student.is_active)
+
+        self._post("user_delete", student.id)
+        self.assertFalse(User.objects.filter(username="pete").exists())
+
+    def test_restore_brings_archived_user_back_active(self):
+        student = make_student("nina")
+        self._post("user_archive", student.id)
+        self._post("user_restore", student.id)
+        student.refresh_from_db()
+        self.assertFalse(student.is_archived)
+        self.assertTrue(student.is_active)
+
+    def test_users_page_shows_status_tabs_and_no_participants_answers_tabs(self):
+        resp = self.client.get(reverse("admin:users"))
+        html = resp.content.decode()
+        self.assertIn("Archived", html)
+        self.assertIn("Deactivated", html)
+        resp = self.client.get(reverse("admin:index"))
+        html = resp.content.decode()
+        self.assertNotIn("/admin/participants/", html)
+        self.assertNotIn("/admin/answers/", html)
