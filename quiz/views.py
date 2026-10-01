@@ -636,6 +636,23 @@ def start_quiz(request, module_id):
     return redirect("host_lobby", code=session.code)
 
 
+def _notify_state_change(session, event):
+    """Push the new state to every connected mobile client.
+
+    The web UI polls /api/quiz/<code>/state/, but the Android app holds a
+    WebSocket open and would otherwise sit on a stale question until it
+    reconnects. Teacher actions on the web therefore need to broadcast.
+    """
+    try:
+        from mobileapi.broadcast import broadcast_state, broadcast_to_all
+
+        broadcast_state(session.code, include_leaderboard=True)
+        broadcast_to_all(session.code, event)
+    except Exception:
+        # Never let a notification failure break a teacher's action.
+        pass
+
+
 @login_required
 def host_lobby(request, code):
     session = get_object_or_404(QuizSession, code=code, host=request.user)
@@ -664,6 +681,7 @@ def host_start_question(request, code):
         session.status = QuizSession.Status.ENDED
         session.ended_at = timezone.now()
         session.save()
+        _notify_state_change(session, "ended")
         return redirect("host_control", code=code)
     session.status = QuizSession.Status.QUESTION
     now = timezone.now()
@@ -672,6 +690,7 @@ def host_start_question(request, code):
         seconds=max(10, question.time_limit)
     )
     session.save()
+    _notify_state_change(session, "question")
     return redirect("host_control", code=code)
 
 
@@ -681,6 +700,7 @@ def host_reveal(request, code):
     if request.method == "POST" and session.status == QuizSession.Status.QUESTION:
         session.status = QuizSession.Status.REVEAL
         session.save(update_fields=["status"])
+        _notify_state_change(session, "reveal")
     return redirect("host_control", code=code)
 
 
@@ -697,6 +717,7 @@ def host_pause(request, code):
     if err:
         return err
     session.pause()
+    _notify_state_change(session, "paused")
     return JsonResponse({"ok": True})
 
 
@@ -706,6 +727,7 @@ def host_resume(request, code):
     if request.method != "POST":
         return JsonResponse({"ok": False, "error": "Method not allowed"}, status=405)
     session.resume()
+    _notify_state_change(session, "resumed")
     return JsonResponse({"ok": True})
 
 
@@ -716,6 +738,7 @@ def host_add_time(request, code):
     if err:
         return err
     session.add_time(seconds=15)
+    _notify_state_change(session, "time_added")
     return JsonResponse({"ok": True})
 
 
@@ -730,6 +753,7 @@ def host_next_question(request, code):
         session.status = QuizSession.Status.ENDED
         session.ended_at = timezone.now()
         session.save()
+        _notify_state_change(session, "ended")
         return redirect("host_control", code=code)
     session.status = QuizSession.Status.QUESTION
     now = timezone.now()
@@ -738,6 +762,7 @@ def host_next_question(request, code):
         seconds=max(10, question.time_limit)
     )
     session.save()
+    _notify_state_change(session, "question")
     return redirect("host_control", code=code)
 
 
@@ -748,6 +773,7 @@ def host_end_quiz(request, code):
         session.status = QuizSession.Status.ENDED
         session.ended_at = timezone.now()
         session.save()
+        _notify_state_change(session, "ended")
         log_activity(
             request.user,
             ActivityLog.Action.QUIZ_ENDED,
@@ -1063,6 +1089,9 @@ def quiz_state(request, code):
         if session.question_ends_at and now >= session.question_ends_at:
             session.status = QuizSession.Status.REVEAL
             session.save(update_fields=["status"])
+            # The ticker broadcast alone only carries a status change, so push
+            # the full state to make sure mobile clients render the reveal.
+            _notify_state_change(session, "reveal")
 
     if request.user.is_authenticated and session.host_id == request.user.id:
         return JsonResponse(_session_json(session, host_id=request.user.id))
