@@ -285,6 +285,14 @@ class Participant(models.Model):
         max_length=10, choices=Team.choices, blank=True, default=""
     )
     score = models.IntegerField(default=0)
+    api_token = models.CharField(
+        max_length=64,
+        unique=True,
+        null=True,
+        blank=True,
+        editable=False,
+        help_text="Mobile app ticket binding a device to this play.",
+    )
     joined_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
