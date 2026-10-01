@@ -5,7 +5,9 @@ from channels.layers import get_channel_layer
 
 
 def group_for(code):
-    return f"quiz.{code}"
+    # Normalise case: the consumer upper-codes the URL segment while views pass
+    # session.code, so normalising here keeps both sides on one group name.
+    return f"quiz.{(code or '').upper()}"
 
 
 def broadcast(code, payload):
